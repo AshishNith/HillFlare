@@ -10,8 +10,14 @@ interface AuthSocket extends Socket {
 }
 
 const onlineUsers = new Map<string, string>(); // userId -> socketId
+let _io: Server;
 
 export const getOnlineUsers = () => onlineUsers;
+
+export const getIO = (): Server => {
+    if (!_io) throw new Error('Socket.io not initialized');
+    return _io;
+};
 
 export const initializeSocket = (httpServer: HttpServer): Server => {
     const io = new Server(httpServer, {
@@ -42,6 +48,7 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
     io.on('connection', (socket: AuthSocket) => {
         const userId = socket.userId!;
         onlineUsers.set(userId, socket.id);
+        _io = io; // keep module-level reference updated
         console.log(`🟢 User connected: ${userId}`);
 
         // Join user's personal room
@@ -135,8 +142,11 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
         });
 
         // Typing indicator
-        socket.on('typing', (data: { chatId: string; isTyping: boolean }) => {
+        socket.on('typing', async (data: { chatId: string; isTyping: boolean }) => {
             const { chatId, isTyping } = data;
+            // Security: only emit if user is a participant in the chat
+            const chat = await Chat.findOne({ _id: chatId, participants: userId });
+            if (!chat) return;
             socket.to(chatId).emit('user_typing', { userId, isTyping });
         });
 

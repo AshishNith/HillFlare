@@ -20,6 +20,7 @@ const messageSchema = new Schema<IMessageDocument>(
         status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },
         timestamp: { type: Date, default: Date.now },
     },
+    { timestamps: true }
 );
 
 messageSchema.index({ chatId: 1, timestamp: -1 });

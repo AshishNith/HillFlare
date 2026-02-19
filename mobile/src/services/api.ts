@@ -66,7 +66,13 @@ async function request(path: string, options: ApiOptions = {}) {
 }
 
 const api = {
-    get: (path: string) => request(path),
+    get: (path: string, config?: { params?: Record<string, string> }) => {
+        if (config?.params) {
+            const qs = new URLSearchParams(config.params).toString();
+            if (qs) return request(`${path}?${qs}`);
+        }
+        return request(path);
+    },
     post: (path: string, body?: any) => request(path, { method: 'POST', body }),
     put: (path: string, body?: any) => request(path, { method: 'PUT', body }),
     delete: (path: string) => request(path, { method: 'DELETE' }),

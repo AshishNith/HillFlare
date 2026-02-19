@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, StatusBar } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { theme } from '../utils/theme';
 
@@ -10,100 +11,105 @@ export default function LoginScreen({ navigation }: any) {
     const { sendOTP } = useAuthStore();
 
     const handleSend = async () => {
-        if (!email.includes('@')) { setError('Please enter a valid college email'); return; }
+        const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.(edu|ac\.in|edu\.in)$/;
+        if (!emailRegex.test(email.trim())) { setError('Please enter a valid college email'); return; }
         setError('');
         setLoading(true);
         try {
             await sendOTP(email);
             navigation.navigate('OTPVerify', { email });
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Failed to send verification code');
+        } catch (e: any) {
+            setError(e.message || 'Failed to send OTP');
         }
         setLoading(false);
     };
 
     return (
-        <View style={s.container}>
-            {/* Background gradient elements */}
-            <View style={s.bgCircle1} />
-            <View style={s.bgCircle2} />
+        <KeyboardAvoidingView style={s.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <StatusBar barStyle="light-content" backgroundColor={theme.colors.surface} />
 
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.content}>
-                {/* Logo area */}
-                <View style={s.logoArea}>
-                    <View style={s.logoIcon}>
-                        <Text style={{ fontSize: 32 }}>💜</Text>
-                    </View>
-                    <Text style={s.appName}>CampusConnect</Text>
-                    <Text style={s.tagline}>Find your match on campus</Text>
+            {/* Top section — flat, no card */}
+            <View style={s.top}>
+                <View style={s.logoIcon}>
+                    <Ionicons name="flame" size={28} color={theme.colors.primary} />
                 </View>
+                <Text style={s.appName}>CampusConnect</Text>
+                <Text style={s.tagline}>Find your campus match</Text>
+            </View>
 
-                {/* Login card */}
-                <View style={s.card}>
-                    <Text style={s.cardTitle}>Welcome back</Text>
-                    <Text style={s.cardSubtitle}>Enter your college email to continue</Text>
+            {/* Form section — flat, no card, just background color change */}
+            <View style={s.form}>
+                <Text style={s.label}>College Email</Text>
+                <TextInput
+                    style={s.input}
+                    value={email}
+                    onChangeText={t => { setEmail(t); setError(''); }}
+                    placeholder="you@college.edu"
+                    placeholderTextColor={theme.colors.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                />
+                {error ? <Text style={s.error}>{error}</Text> : null}
 
-                    <TextInput
-                        style={[s.input, error ? s.inputError : null]}
-                        placeholder="yourname@college.edu"
-                        placeholderTextColor={theme.colors.textMuted + '50'}
-                        value={email}
-                        onChangeText={(t) => { setEmail(t); setError(''); }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
+                <TouchableOpacity style={[s.button, loading && s.buttonDisabled]} onPress={handleSend} disabled={loading} activeOpacity={0.85}>
+                    {loading ? <ActivityIndicator color="#fff" size="small" /> : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Text style={s.buttonText}>Continue</Text>
+                            <Ionicons name="arrow-forward" size={16} color="#fff" />
+                        </View>
+                    )}
+                </TouchableOpacity>
 
-                    {error ? <Text style={s.error}>{error}</Text> : null}
-
-                    <TouchableOpacity style={[s.button, loading && s.buttonDisabled]} onPress={handleSend} disabled={loading}>
-                        {loading ? (
-                            <ActivityIndicator color="#fff" size="small" />
-                        ) : (
-                            <Text style={s.buttonText}>Send Verification Code →</Text>
-                        )}
-                    </TouchableOpacity>
-
-                    <Text style={s.footerText}>
-                        Only verified college emails are accepted
-                    </Text>
-                </View>
-            </KeyboardAvoidingView>
-        </View>
+                <Text style={s.footerText}>Only verified college emails accepted</Text>
+            </View>
+        </KeyboardAvoidingView>
     );
 }
 
 const s = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.surface },
-    content: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
 
-    // Background decoration
-    bgCircle1: { position: 'absolute', top: -80, right: -60, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(139,92,246,0.06)' },
-    bgCircle2: { position: 'absolute', bottom: -100, left: -80, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(236,72,153,0.04)' },
+    top: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 32,
+    },
+    logoIcon: {
+        width: 56, height: 56,
+        backgroundColor: 'rgba(123,47,255,0.12)',
+        borderRadius: 14,
+        justifyContent: 'center', alignItems: 'center',
+        marginBottom: 20,
+    },
+    appName: { fontSize: 28, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.5, marginBottom: 8 },
+    tagline: { fontSize: 15, color: theme.colors.textMuted, textAlign: 'center' },
 
-    // Logo
-    logoArea: { alignItems: 'center', marginBottom: 40 },
-    logoIcon: { width: 64, height: 64, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: 16, backgroundColor: 'rgba(139,92,246,0.15)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)' },
-    appName: { fontSize: 28, fontWeight: 'bold', color: theme.colors.text, marginBottom: 6 },
-    tagline: { fontSize: 14, color: theme.colors.textMuted },
-
-    // Card
-    card: { backgroundColor: theme.colors.surface2, borderRadius: 24, padding: 28, borderWidth: 1, borderColor: theme.colors.border },
-    cardTitle: { fontSize: 20, fontWeight: 'bold', color: theme.colors.text, marginBottom: 4 },
-    cardSubtitle: { fontSize: 13, color: theme.colors.textMuted, marginBottom: 24 },
-
-    // Input
-    input: { backgroundColor: theme.colors.surface3, borderRadius: 14, padding: 16, color: theme.colors.text, fontSize: 15, marginBottom: 12, borderWidth: 1, borderColor: theme.colors.border },
-    inputError: { borderColor: theme.colors.danger + '60' },
-
-    // Error
-    error: { color: theme.colors.danger, fontSize: 12, marginBottom: 12 },
-
-    // Button
-    button: { borderRadius: 14, paddingVertical: 16, alignItems: 'center', backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 },
-    buttonDisabled: { opacity: 0.7 },
-    buttonText: { color: '#fff', fontWeight: '600', fontSize: 15 },
-
-    // Footer
-    footerText: { textAlign: 'center', color: theme.colors.textMuted + '60', fontSize: 11, marginTop: 20 },
+    // Flat form section — just a slightly different background, no card border/shadow
+    form: {
+        backgroundColor: theme.colors.surface2,
+        padding: 28,
+        paddingBottom: 48,
+    },
+    label: { fontSize: 12, fontWeight: '600', color: theme.colors.textMuted, letterSpacing: 1, marginBottom: 10, textTransform: 'uppercase' },
+    input: {
+        backgroundColor: theme.colors.surface3,
+        color: theme.colors.text,
+        fontSize: 15,
+        padding: 14,
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+    error: { color: theme.colors.danger, fontSize: 13, marginBottom: 12 },
+    button: {
+        backgroundColor: theme.colors.primary,
+        borderRadius: 8,
+        paddingVertical: 15,
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+    footerText: { color: theme.colors.textMuted, fontSize: 12, textAlign: 'center' },
 });

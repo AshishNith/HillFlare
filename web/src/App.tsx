@@ -9,7 +9,10 @@ import ExplorePage from './pages/ExplorePage';
 import CrushPage from './pages/CrushPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
+import UserProfilePage from './pages/UserProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import AdminPage from './pages/AdminPage';
+import NotificationsPage from './pages/NotificationsPage';
 import AppLayout from './layouts/AppLayout';
 
 export default function App() {
@@ -28,9 +31,12 @@ export default function App() {
           <Route path="/swipe" element={<SwipePage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/crush" element={<CrushPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/user/:id" element={<UserProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

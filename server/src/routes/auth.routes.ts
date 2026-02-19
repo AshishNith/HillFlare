@@ -8,11 +8,15 @@ import { sendOTPEmail } from '../services/email';
 import { validate } from '../middleware/validate';
 import { authLimiter } from '../middleware/rateLimiter';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { COLLEGE_EMAIL_REGEX } from '../../../shared/constants';
 
 const router = Router();
 
 const sendOTPSchema = z.object({
-    email: z.string().email('Invalid email'),
+    email: z.string().email('Invalid email').refine(
+        (e) => COLLEGE_EMAIL_REGEX.test(e),
+        { message: 'Only college emails (.edu, .ac.in) are allowed' }
+    ),
 });
 
 const verifyOTPSchema = z.object({
@@ -90,8 +94,17 @@ router.post('/verify-otp', authLimiter, validate(verifyOTPSchema), async (req, r
                     _id: user._id,
                     name: user.name,
                     email: user.email,
+                    department: user.department,
+                    year: user.year,
+                    interests: user.interests,
+                    clubs: user.clubs,
+                    photos: user.photos,
+                    bio: user.bio,
+                    avatar: user.avatar,
                     isProfileComplete: user.isProfileComplete,
                     role: user.role,
+                    isVerified: user.isVerified,
+                    isSuspended: user.isSuspended,
                 },
             },
         });
@@ -134,7 +147,27 @@ router.post('/refresh', async (req, res: Response): Promise<void> => {
 
 // Get current user
 router.get('/me', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
-    res.json({ success: true, data: req.user });
+    const u = req.user!;
+    res.json({
+        success: true,
+        data: {
+            _id: u._id,
+            name: u.name,
+            email: u.email,
+            department: u.department,
+            year: u.year,
+            interests: u.interests,
+            clubs: u.clubs,
+            photos: u.photos,
+            bio: u.bio,
+            avatar: u.avatar,
+            isProfileComplete: u.isProfileComplete,
+            role: u.role,
+            isVerified: u.isVerified,
+            isSuspended: u.isSuspended,
+            blockedUsers: u.blockedUsers,
+        },
+    });
 });
 
 // Logout

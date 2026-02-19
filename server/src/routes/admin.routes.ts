@@ -116,6 +116,19 @@ router.post('/users/:id/unban', authenticate, requireAdmin, async (req: AuthRequ
     }
 });
 
+// Delete user (admin)
+router.delete('/users/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) { res.status(404).json({ success: false, error: 'User not found' }); return; }
+        if (user.role === 'admin') { res.status(403).json({ success: false, error: 'Cannot delete admin user' }); return; }
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'User deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to delete user' });
+    }
+});
+
 // Dashboard stats (admin)
 router.get('/stats', authenticate, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
     try {

@@ -1,149 +1,206 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Home, Flame, Search, Heart, MessageCircle, User, Settings, Shield, LogOut, Bell } from 'lucide-react';
+import api from '../services/api';
 
 const navItems = [
-    { path: '/dashboard', icon: '🏠', label: 'Home' },
-    { path: '/swipe', icon: '💘', label: 'Swipe' },
-    { path: '/explore', icon: '🔍', label: 'Explore' },
-    { path: '/crush', icon: '🤫', label: 'Crush' },
-    { path: '/chat', icon: '💬', label: 'Chat' },
-    { path: '/profile', icon: '👤', label: 'Profile' },
+    { path: '/dashboard', icon: Home, label: 'Home' },
+    { path: '/swipe', icon: Flame, label: 'Discover' },
+    { path: '/explore', icon: Search, label: 'Explore' },
+    { path: '/crush', icon: Heart, label: 'Crush' },
+    { path: '/chat', icon: MessageCircle, label: 'Chat' },
+    { path: '/notifications', icon: Bell, label: 'Activity' },
+    { path: '/profile', icon: User, label: 'Profile' },
 ];
 
 export default function AppLayout() {
     const { user, fetchUser, logout, isAuthenticated } = useAuthStore();
     const navigate = useNavigate();
     const location = useLocation();
+    const [unreadCount, setUnreadCount] = useState(0);
 
+    useEffect(() => { if (isAuthenticated) fetchUser(); }, []);
+
+    // Poll unread notification count every 30s
     useEffect(() => {
-        if (isAuthenticated) fetchUser();
-    }, []);
+        if (!isAuthenticated) return;
+        const fetchUnread = async () => {
+            try {
+                const { data } = await api.get('/notifications');
+                setUnreadCount(data.unreadCount || 0);
+            } catch { }
+        };
+        fetchUnread();
+        const interval = setInterval(fetchUnread, 30000);
+        return () => clearInterval(interval);
+    }, [isAuthenticated]);
 
-    if (!isAuthenticated) {
-        navigate('/login');
-        return null;
-    }
+    if (!isAuthenticated) { navigate('/login'); return null; }
 
-    const initials = user?.name?.split(' ').map((n) => n[0]).join('') || '?';
+    // Mandatory Profile Completion Check
+    useEffect(() => {
+        if (user && !user.isProfileComplete) {
+            const isSetup = location.pathname === '/setup';
+            if (!isSetup) {
+                navigate('/setup', { replace: true });
+            }
+        }
+    }, [user, location.pathname, navigate]);
+
+    const initials = user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2) || '?';
 
     return (
-        <div className="min-h-screen bg-gradient-mesh flex">
-            {/* Sidebar - Desktop */}
-            <aside className="hidden lg:flex flex-col w-72 glass-strong fixed h-full z-30"
-                style={{ borderRight: '1px solid rgba(139,92,246,0.08)' }}>
-                {/* Logo */}
-                <div className="flex items-center gap-3 px-7 pt-8 pb-6">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                        style={{ background: 'linear-gradient(135deg, #8B5CF6, #EC4899)' }}>💜</div>
-                    <span className="text-xl font-bold text-gradient">CampusConnect</span>
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-surface)' }}>
+
+            {/* Sidebar - Desktop: flat, no border-radius, no shadow */}
+            <aside style={{
+                width: '220px', position: 'fixed', height: '100%', zIndex: 30,
+                backgroundColor: 'var(--color-surface-2)',
+                borderRight: '1px solid var(--color-border)',
+                flexDirection: 'column',
+            }} className="hidden lg:flex">
+
+                {/* Logo — flat, no card */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '24px 20px 20px' }}>
+                    <div style={{
+                        width: '32px', height: '32px',
+                        backgroundColor: 'var(--color-primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: '6px',
+                    }}>
+                        <Flame size={16} color="#fff" strokeWidth={2.5} />
+                    </div>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>CampusConnect</span>
                 </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 px-4 space-y-1 mt-2">
+                {/* Nav — flat rows, no rounded highlight */}
+                <nav style={{ flex: 1, padding: '4px 0', display: 'flex', flexDirection: 'column' }}>
                     {navItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) =>
-                                `flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition-all text-sm font-medium relative ${isActive
-                                    ? 'text-white'
-                                    : 'text-text-muted hover:text-text hover:bg-white/[0.03]'
-                                }`
-                            }
+                        <NavLink key={item.path} to={item.path}
+                            style={({ isActive }) => ({
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '11px 20px',
+                                textDecoration: 'none', fontSize: '14px', fontWeight: 500,
+                                color: isActive ? 'var(--color-text)' : 'var(--color-text-muted)',
+                                backgroundColor: isActive ? 'var(--color-surface-3)' : 'transparent',
+                                borderLeft: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
+                                transition: 'all 0.12s ease',
+                                position: 'relative',
+                            })}
                         >
                             {({ isActive }) => (
                                 <>
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="nav-active"
-                                            className="absolute inset-0 rounded-xl"
-                                            style={{
-                                                background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.08))',
-                                                border: '1px solid rgba(139,92,246,0.2)',
-                                                boxShadow: '0 0 20px rgba(139,92,246,0.1)',
-                                            }}
-                                            transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
-                                        />
-                                    )}
-                                    <span className="text-lg relative z-10">{item.icon}</span>
-                                    <span className="relative z-10">{item.label}</span>
+                                    <span style={{ position: 'relative', display: 'flex' }}>
+                                        <item.icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+                                        {item.path === '/notifications' && unreadCount > 0 && (
+                                            <span style={{
+                                                position: 'absolute', top: '-5px', right: '-7px',
+                                                width: '14px', height: '14px', borderRadius: '50%',
+                                                backgroundColor: 'var(--color-danger)',
+                                                fontSize: '9px', fontWeight: 700, color: '#fff',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+                                        )}
+                                    </span>
+                                    {item.label}
                                 </>
                             )}
                         </NavLink>
                     ))}
                 </nav>
 
-                {/* Bottom section */}
-                <div className="px-4 pb-6 space-y-1">
-                    <div className="border-t border-white/[0.05] mb-3" />
-                    <NavLink to="/settings" className="flex items-center gap-3.5 px-4 py-3 rounded-xl text-text-muted hover:text-text hover:bg-white/[0.03] transition-all text-sm font-medium">
-                        <span className="text-lg">⚙️</span> Settings
+                {/* Bottom — flat */}
+                <div style={{ borderTop: '1px solid var(--color-border)' }}>
+                    <NavLink to="/settings"
+                        style={({ isActive }) => ({
+                            display: 'flex', alignItems: 'center', gap: '12px',
+                            padding: '11px 20px', textDecoration: 'none', fontSize: '14px',
+                            color: isActive ? 'var(--color-text)' : 'var(--color-text-muted)',
+                            backgroundColor: isActive ? 'var(--color-surface-3)' : 'transparent',
+                            borderLeft: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
+                        })}>
+                        <Settings size={16} strokeWidth={2} /> Settings
                     </NavLink>
                     {user?.role === 'admin' && (
-                        <NavLink to="/admin" className="flex items-center gap-3.5 px-4 py-3 rounded-xl text-text-muted hover:text-text hover:bg-white/[0.03] transition-all text-sm font-medium">
-                            <span className="text-lg">🛡️</span> Admin
+                        <NavLink to="/admin"
+                            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 20px', textDecoration: 'none', fontSize: '14px', color: 'var(--color-text-muted)', borderLeft: '2px solid transparent' }}>
+                            <Shield size={16} strokeWidth={2} /> Admin
                         </NavLink>
                     )}
-
-                    {/* User card */}
-                    <div className="mt-3 flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.02]">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.2))' }}>
-                            {initials}
+                    {/* User row — flat, no card */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 20px', borderTop: '1px solid var(--color-border)' }}>
+                        <div style={{
+                            width: '30px', height: '30px', borderRadius: '50%',
+                            backgroundColor: 'var(--color-primary)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '11px', fontWeight: 700, color: '#fff', flexShrink: 0,
+                        }}>{initials}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
+                            <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{user?.name}</p>
-                            <p className="text-[11px] text-text-muted truncate">{user?.email}</p>
-                        </div>
-                        <button onClick={logout} className="text-text-muted hover:text-danger transition-colors text-sm" title="Logout">
-                            🚪
+                        <button onClick={logout}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', padding: '4px' }}
+                            title="Logout">
+                            <LogOut size={14} strokeWidth={2} />
                         </button>
                     </div>
                 </div>
             </aside>
 
             {/* Mobile bottom nav */}
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass-strong z-30"
-                style={{ borderTop: '1px solid rgba(139,92,246,0.08)' }}>
-                <div className="flex justify-around px-2 py-1">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) =>
-                                `flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-xl transition-all relative ${isActive ? 'text-primary-light' : 'text-text-muted'}`
-                            }
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="mob-nav"
-                                            className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
-                                            style={{ background: 'linear-gradient(90deg, #8B5CF6, #EC4899)' }}
-                                        />
+            <nav className="lg:hidden" style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
+                backgroundColor: 'var(--color-surface-2)',
+                borderTop: '1px solid var(--color-border)',
+                display: 'flex', justifyContent: 'space-around',
+                padding: '10px 0 14px',
+            }}>
+                {navItems.map((item) => (
+                    <NavLink key={item.path} to={item.path}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '2px 12px', textDecoration: 'none', position: 'relative' }}
+                    >
+                        {({ isActive }) => (
+                            <>
+                                {isActive && (
+                                    <motion.div layoutId="mob-nav"
+                                        style={{
+                                            position: 'absolute', top: '-10px', left: 0, right: 0,
+                                            height: '2px', backgroundColor: 'var(--color-primary)',
+                                        }}
+                                    />
+                                )}
+                                <span style={{ position: 'relative', display: 'flex' }}>
+                                    <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.8}
+                                        color={isActive ? 'var(--color-primary)' : 'var(--color-text-muted)'} />
+                                    {item.path === '/notifications' && unreadCount > 0 && (
+                                        <span style={{
+                                            position: 'absolute', top: '-5px', right: '-7px',
+                                            width: '14px', height: '14px', borderRadius: '50%',
+                                            backgroundColor: 'var(--color-danger)',
+                                            fontSize: '9px', fontWeight: 700, color: '#fff',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
                                     )}
-                                    <span className="text-xl">{item.icon}</span>
-                                    <span className="text-[10px] font-medium">{item.label}</span>
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
-                </div>
+                                </span>
+                                <span style={{ fontSize: '10px', fontWeight: 500, color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+                                    {item.label}
+                                </span>
+                            </>
+                        )}
+                    </NavLink>
+                ))}
             </nav>
 
             {/* Main content */}
-            <main className="flex-1 lg:ml-72 pb-20 lg:pb-0">
+            <main className="lg:ml-[220px]" style={{ flex: 1, paddingBottom: '80px' }}>
                 <AnimatePresence mode="wait">
-                    <motion.div
-                        key={location.pathname}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                        className="min-h-screen"
+                    <motion.div key={location.pathname}
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        style={{ minHeight: '100vh' }}
                     >
                         <Outlet />
                     </motion.div>

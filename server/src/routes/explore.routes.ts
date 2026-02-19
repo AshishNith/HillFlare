@@ -17,36 +17,48 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response): Promise<v
             year,
             interests,
             clubs,
+            search,
         } = req.query;
 
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 20;
 
         // Build filter
-        const filter: Record<string, unknown> = {
-            _id: { $ne: userId },
+        const query: any = {
+            _id: { $ne: userId }, // Default: exclude self
             isVerified: true,
             isProfileComplete: true,
             isSuspended: false,
         };
 
-        if (department) filter.department = department;
-        if (year) filter.year = parseInt(year as string);
+        if (department) query.department = department;
+        if (year) query.year = parseInt(year as string);
         if (interests) {
             const interestList = (interests as string).split(',');
-            filter.interests = { $in: interestList };
+            query.interests = { $in: interestList };
         }
         if (clubs) {
             const clubList = (clubs as string).split(',');
-            filter.clubs = { $in: clubList };
+            query.clubs = { $in: clubList };
         }
 
-        // Exclude blocked users
+        // Search logic
+        if (search) {
+            const searchRegex = { $regex: search as string, $options: 'i' };
+            query.$or = [
+                { name: searchRegex },
+                { department: searchRegex },
+                { interests: searchRegex },
+                { clubs: searchRegex },
+            ];
+        }
+
+        // Exclude blocked users (override _id if needed to include blocked list)
         if (currentUser.blockedUsers?.length > 0) {
-            filter._id = { $nin: [...currentUser.blockedUsers, userId] };
+            query._id = { $nin: [...currentUser.blockedUsers, userId] };
         }
 
-        const profiles = await User.find(filter)
+        const profiles = await User.find(query)
             .select('name department year interests clubs photos bio avatar')
             .lean();
 

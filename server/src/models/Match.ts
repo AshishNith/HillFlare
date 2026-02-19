@@ -16,5 +16,6 @@ const matchSchema = new Schema<IMatchDocument>(
 
 matchSchema.index({ user1: 1 });
 matchSchema.index({ user2: 1 });
+matchSchema.index({ user1: 1, user2: 1 }, { unique: true });
 
 export const Match = mongoose.model<IMatchDocument>('Match', matchSchema);

@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { io, Socket } from 'socket.io-client';
+import { Search, MessageCircle, ArrowLeft, Camera, Smile, Send, Loader2, CheckCheck, Check } from 'lucide-react';
 import api from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 
 interface ChatItem {
     _id: string;
-    participants: { _id: string; name: string; avatar: string }[];
+    participants: { _id: string; name: string; avatar: string; photos?: string[] }[];
     lastMessage: string;
     lastMessageAt: string;
 }
@@ -14,7 +16,7 @@ interface ChatItem {
 interface Message {
     _id: string;
     chatId: string;
-    sender: { _id: string; name: string; avatar: string } | string;
+    sender: { _id: string; name: string } | string;
     content: string;
     type?: 'text' | 'image';
     imageUrl?: string;
@@ -23,8 +25,23 @@ interface Message {
     timestamp: string;
 }
 
+function timeAgo(dateStr: string) {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hr`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days`;
+    return 'Last week';
+}
+
 export default function ChatPage() {
+    const navigate = useNavigate();
     const [chats, setChats] = useState<ChatItem[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [activeChat, setActiveChat] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
@@ -39,55 +56,27 @@ export default function ChatPage() {
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
-        const s = io(window.location.origin, {
-            auth: { token },
-            transports: ['websocket', 'polling'],
-        });
+        const s = io(window.location.origin, { auth: { token }, transports: ['websocket', 'polling'] });
         socketRef.current = s;
-
         s.on('connect', () => console.log('Chat socket connected'));
-        s.on('connect_error', (err) => console.error('Chat socket error:', err.message));
-
-        // Online status
-        s.on('online_users', (userIds: string[]) => setOnlineUserIds(new Set(userIds)));
-        s.on('user_online', ({ userId: uid }) => {
-            setOnlineUserIds((prev) => new Set(prev).add(uid));
-        });
-        s.on('user_offline', ({ userId: uid }) => {
-            setOnlineUserIds((prev) => { const n = new Set(prev); n.delete(uid); return n; });
-        });
-
-        // Messages
-        s.on('new_message', (message: Message) => {
-            setMessages((prev) => [...prev, message]);
-            scrollToBottom();
-        });
-
-        // Message status (delivered)
-        s.on('message_status_update', ({ messageId, status }: { messageId: string; status: string }) => {
-            setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, status: status as Message['status'] } : m));
-        });
-
-        // Messages read (blue ticks)
-        s.on('messages_read', ({ chatId }: { chatId: string }) => {
-            setMessages((prev) => prev.map((m) => {
+        s.on('online_users', (ids: string[]) => setOnlineUserIds(new Set(ids)));
+        s.on('user_online', ({ userId: uid }) => setOnlineUserIds(p => new Set(p).add(uid)));
+        s.on('user_offline', ({ userId: uid }) => setOnlineUserIds(p => { const n = new Set(p); n.delete(uid); return n; }));
+        s.on('new_message', (msg: Message) => { setMessages(p => [...p, msg]); scrollToBottom(); });
+        s.on('message_status_update', ({ messageId, status }) =>
+            setMessages(p => p.map(m => m._id === messageId ? { ...m, status: status as Message['status'] } : m)));
+        s.on('messages_read', ({ chatId }) =>
+            setMessages(p => p.map(m => {
                 const sid = typeof m.sender === 'string' ? m.sender : m.sender._id;
                 return m.chatId === chatId && sid === user?._id ? { ...m, status: 'read' } : m;
-            }));
-        });
-
-        // Typing
+            })));
         s.on('user_typing', ({ isTyping }) => setTyping(isTyping));
-
         fetchChats();
         return () => { s.disconnect(); };
     }, []);
 
     const fetchChats = async () => {
-        try {
-            const { data } = await api.get('/chats');
-            setChats(data.data || []);
-        } catch { }
+        try { const { data } = await api.get('/chats'); setChats(data.data || []); } catch { }
     };
 
     const openChat = async (chatId: string) => {
@@ -113,150 +102,241 @@ export default function ChatPage() {
         setNewMessage(value);
         socketRef.current?.emit('typing', { chatId: activeChat, isTyping: value.length > 0 });
         clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
-            socketRef.current?.emit('typing', { chatId: activeChat, isTyping: false });
-        }, 3000);
+        typingTimeoutRef.current = setTimeout(() =>
+            socketRef.current?.emit('typing', { chatId: activeChat, isTyping: false }), 3000);
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !activeChat) return;
-
         setUploading(true);
         const reader = new FileReader();
         reader.onload = async () => {
-            try {
-                const base64 = reader.result as string;
-                await api.post(`/chats/${activeChat}/image`, { image: base64 });
-                // Server will emit via socket
-            } catch (err) {
-                console.error('Image upload error:', err);
-            }
+            try { await api.post(`/chats/${activeChat}/image`, { image: reader.result }); } catch { }
             setUploading(false);
         };
         reader.readAsDataURL(file);
-        e.target.value = ''; // reset input
+        e.target.value = '';
     };
 
-    const scrollToBottom = () => {
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    };
-
-    const getOtherUser = (chat: ChatItem) => {
-        return chat.participants.find((p) => p._id !== user?._id) || chat.participants[0];
-    };
-
+    const scrollToBottom = () => setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+    const getOtherUser = (chat: ChatItem) => chat.participants.find(p => p._id !== user?._id) || chat.participants[0];
     const getSenderId = (msg: Message) => typeof msg.sender === 'string' ? msg.sender : msg.sender._id;
 
     const renderTicks = (msg: Message) => {
-        const status = msg.status || (msg.seen ? 'read' : 'sent');
-        if (status === 'read') return <span className="text-[10px] text-blue-400 ml-1">✓✓</span>;
-        if (status === 'delivered') return <span className="text-[10px] opacity-50 ml-1">✓✓</span>;
-        return <span className="text-[10px] opacity-50 ml-1">✓</span>;
+        const st = msg.status || (msg.seen ? 'read' : 'sent');
+        if (st === 'read') return <CheckCheck size={12} color="#60A5FA" style={{ marginLeft: '3px' }} />;
+        if (st === 'delivered') return <CheckCheck size={12} color="rgba(255,255,255,0.4)" style={{ marginLeft: '3px' }} />;
+        return <Check size={12} color="rgba(255,255,255,0.4)" style={{ marginLeft: '3px' }} />;
     };
 
-    return (
-        <div className="flex h-screen lg:h-[calc(100vh-0px)]">
-            {/* Hidden file input for image upload */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-            />
+    const otherUser = activeChat ? chats.find(c => c._id === activeChat)?.participants.find(p => p._id !== user?._id) : null;
+    const isOtherOnline = otherUser?._id ? onlineUserIds.has(otherUser._id) : false;
+    const matches = chats.slice(0, 10);
 
-            {/* Chat list */}
-            <div className={`${activeChat ? 'hidden md:block' : ''} w-full md:w-80 lg:w-96 glass-strong border-r border-primary/10 flex flex-col`}>
-                <div className="p-6 border-b border-primary/10">
-                    <h1 className="text-xl font-bold"><span className="text-gradient">Messages</span></h1>
+    return (
+        <div style={{ display: 'flex', height: '100vh', backgroundColor: 'var(--color-surface)' }}>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+
+            {/* Left panel: matches + chat list */}
+            <div style={{
+                width: activeChat ? '0' : '100%',
+                maxWidth: '420px',
+                display: activeChat ? 'none' : 'flex',
+                flexDirection: 'column',
+                borderRight: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-surface)',
+                overflow: 'hidden',
+            }} className="md:flex md:flex-col md:w-96 md:max-w-none">
+                {/* Header */}
+                <div style={{ padding: '24px 20px 16px' }}>
+                    <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Messages</h1>
                 </div>
-                <div className="flex-1 overflow-y-auto">
-                    {chats.length === 0 ? (
-                        <div className="text-center py-20 text-text-muted">
-                            <div className="text-4xl mb-3">💬</div>
-                            <p>No conversations yet</p>
-                            <p className="text-sm">Match with someone to start chatting!</p>
-                        </div>
-                    ) : (
-                        chats.map((chat) => {
-                            const other = getOtherUser(chat);
-                            const isOnline = other?._id ? onlineUserIds.has(other._id) : false;
-                            return (
-                                <button key={chat._id} onClick={() => openChat(chat._id)}
-                                    className={`w-full p-4 flex items-center gap-3 hover:bg-surface-3 transition-all text-left ${activeChat === chat._id ? 'bg-primary/10' : ''
-                                        }`}>
-                                    <div className="relative flex-shrink-0">
-                                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-lg font-bold text-primary-light">
-                                            {other?.name?.[0] || '?'}
+
+                {/* Matches row */}
+                {matches.length > 0 && (
+                    <div style={{ paddingBottom: '16px' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-text-muted)', letterSpacing: '1.5px', padding: '0 20px 12px' }}>MATCHES</p>
+                        <div style={{ display: 'flex', gap: '16px', paddingLeft: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
+                            {matches.map(chat => {
+                                const other = getOtherUser(chat);
+                                const isOnline = other?._id ? onlineUserIds.has(other._id) : false;
+                                return (
+                                    <button key={chat._id} onClick={() => openChat(chat._id)}
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', minWidth: '60px' }}>
+                                        <div style={{ position: 'relative' }}>
+                                            {other?.photos?.[0] ? (
+                                                <img src={other.photos[0]} alt={other.name}
+                                                    onClick={e => { e.stopPropagation(); navigate(`/user/${other._id}`); }}
+                                                    style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-primary)', cursor: 'pointer' }} />
+                                            ) : (
+                                                <div onClick={e => { e.stopPropagation(); navigate(`/user/${other!._id}`); }}
+                                                    style={{
+                                                        width: '56px', height: '56px', borderRadius: '50%', cursor: 'pointer',
+                                                        backgroundColor: 'var(--color-surface-3)',
+                                                        border: '2px solid var(--color-primary)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontSize: '20px', fontWeight: 700, color: 'var(--color-primary-light)',
+                                                    }}>{other?.name?.[0] || '?'}</div>
+                                            )}
+                                            {isOnline && (
+                                                <div style={{
+                                                    position: 'absolute', bottom: '1px', right: '1px',
+                                                    width: '12px', height: '12px', borderRadius: '50%',
+                                                    backgroundColor: 'var(--color-success)',
+                                                    border: '2px solid var(--color-surface)',
+                                                }} />
+                                            )}
                                         </div>
-                                        {isOnline && (
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-surface" />
-                                        )}
+                                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>{other?.name?.split(' ')[0] || 'User'}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Search */}
+                <div style={{ padding: '0 16px 12px', position: 'relative' }}>
+                    <Search size={14} color="var(--color-text-muted)" style={{ position: 'absolute', left: '28px', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input placeholder="Search" className="search-field" style={{ paddingLeft: '36px' }} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                </div>
+
+                {/* Chat list */}
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                    {(() => {
+                        const filteredChats = searchQuery.trim()
+                            ? chats.filter(chat => {
+                                const other = getOtherUser(chat);
+                                return other?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+                            })
+                            : chats;
+                        if (filteredChats.length === 0) return (
+                            <div style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--color-text-muted)' }}>
+                                <MessageCircle size={40} style={{ margin: '0 auto 12px', opacity: 0.4 }} />
+                                <p>{searchQuery ? 'No results' : 'No conversations yet'}</p>
+                            </div>
+                        );
+                        return filteredChats.map(chat => {
+                        const other = getOtherUser(chat);
+                        const isOnline = other?._id ? onlineUserIds.has(other._id) : false;
+                        return (
+                            <button key={chat._id} onClick={() => openChat(chat._id)}
+                                style={{
+                                    width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
+                                    padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer',
+                                    textAlign: 'left', transition: 'background 0.15s',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-surface-2)')}
+                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                            >
+                                <div style={{ position: 'relative', flexShrink: 0, cursor: 'pointer' }}
+                                    onClick={e => { e.stopPropagation(); navigate(`/user/${other!._id}`); }}>
+                                    {other?.photos?.[0] ? (
+                                        <img src={other.photos[0]} alt={other?.name}
+                                            style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <div style={{
+                                            width: '48px', height: '48px', borderRadius: '50%',
+                                            backgroundColor: 'var(--color-surface-3)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '18px', fontWeight: 700, color: 'var(--color-primary-light)',
+                                        }}>{other?.name?.[0] || '?'}</div>
+                                    )}
+                                    {isOnline && (
+                                        <div style={{
+                                            position: 'absolute', bottom: '1px', right: '1px',
+                                            width: '11px', height: '11px', borderRadius: '50%',
+                                            backgroundColor: 'var(--color-success)',
+                                            border: '2px solid var(--color-surface)',
+                                        }} />
+                                    )}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                                        <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)' }}>{other?.name || 'User'}</span>
+                                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{timeAgo(chat.lastMessageAt)}</span>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-sm truncate">{other?.name || 'User'}</p>
-                                        <p className="text-text-muted text-xs truncate">{chat.lastMessage || 'Say hello!'}</p>
-                                    </div>
-                                </button>
-                            );
-                        })
-                    )}
+                                    <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chat.lastMessage || 'Say hello!'}</p>
+                                </div>
+                            </button>
+                        );
+                    });
+                    })()}
                 </div>
             </div>
 
             {/* Chat area */}
-            <div className={`${activeChat ? '' : 'hidden md:flex'} flex-1 flex flex-col`}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-surface)' }}>
                 {activeChat ? (
                     <>
-                        {/* Header */}
-                        {(() => {
-                            const otherUser = chats.find((c) => c._id === activeChat)?.participants.find((p) => p._id !== user?._id);
-                            const isOnline = otherUser?._id ? onlineUserIds.has(otherUser._id) : false;
-                            return (
-                                <div className="p-4 glass-strong border-b border-primary/10 flex items-center gap-3">
-                                    <button onClick={() => { setActiveChat(null); fetchChats(); }} className="md:hidden text-text-muted hover:text-text text-xl">
-                                        ←
-                                    </button>
-                                    <div className="relative">
-                                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary-light">
-                                            {otherUser?.name?.[0] || '?'}
-                                        </div>
-                                        {isOnline && (
-                                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-surface" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-sm">{otherUser?.name || 'User'}</p>
-                                        {typing ? (
-                                            <p className="text-xs text-green-400 italic">typing...</p>
-                                        ) : (
-                                            <p className="text-xs text-text-muted">{isOnline ? 'Online' : 'Offline'}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })()}
+                        {/* Chat header */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '12px',
+                            padding: '16px 20px', borderBottom: '1px solid var(--color-border)',
+                            backgroundColor: 'var(--color-surface-2)',
+                        }}>
+                            <button onClick={() => { setActiveChat(null); fetchChats(); }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)', padding: '4px', display: 'flex', alignItems: 'center' }}>
+                                <ArrowLeft size={20} strokeWidth={2} />
+                            </button>
+                            <div style={{ position: 'relative', cursor: 'pointer' }}
+                                onClick={() => navigate(`/user/${otherUser!._id}`)}>
+                                {otherUser?.photos?.[0] ? (
+                                    <img src={otherUser.photos[0]} alt={otherUser?.name}
+                                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{
+                                        width: '40px', height: '40px', borderRadius: '50%',
+                                        backgroundColor: 'var(--color-surface-3)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '16px', fontWeight: 700, color: 'var(--color-primary-light)',
+                                    }}>{otherUser?.name?.[0] || '?'}</div>
+                                )}
+                                {isOtherOnline && (
+                                    <div style={{
+                                        position: 'absolute', bottom: 0, right: 0,
+                                        width: '10px', height: '10px', borderRadius: '50%',
+                                        backgroundColor: 'var(--color-success)',
+                                        border: '2px solid var(--color-surface-2)',
+                                    }} />
+                                )}
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)' }}>{otherUser?.name || 'Chat'}</p>
+                                {typing ? (
+                                    <p style={{ fontSize: '12px', color: 'var(--color-success)', fontStyle: 'italic' }}>typing...</p>
+                                ) : (
+                                    <p style={{ fontSize: '12px', color: isOtherOnline ? 'var(--color-success)' : 'var(--color-text-muted)' }}>
+                                        {isOtherOnline ? '● Online' : 'Offline'}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                            {messages.map((msg) => {
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {messages.map(msg => {
                                 const isMe = getSenderId(msg) === user?._id;
-                                const isImage = msg.type === 'image' && msg.imageUrl;
+                                const isImg = msg.type === 'image' && msg.imageUrl;
                                 return (
                                     <motion.div key={msg._id}
-                                        className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}>
-                                        <div className={`max-w-xs lg:max-w-md rounded-2xl ${isMe ? 'bg-primary text-white rounded-br-md' : 'glass rounded-bl-md'
-                                            } ${isImage ? 'p-1' : 'px-4 py-2.5'}`}>
-                                            {isImage ? (
-                                                <img src={msg.imageUrl} alt="Shared image" className="rounded-xl max-w-[280px] max-h-[300px] object-cover" />
+                                        style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}
+                                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                                        <div style={{
+                                            maxWidth: '70%',
+                                            backgroundColor: isImg ? 'transparent' : (isMe ? 'var(--color-primary)' : 'var(--color-surface-3)'),
+                                            borderRadius: isMe ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                                            padding: isImg ? '0' : '10px 14px',
+                                            overflow: isImg ? 'hidden' : undefined,
+                                        }}>
+                                            {isImg ? (
+                                                <img src={msg.imageUrl} alt="img" style={{ borderRadius: '16px', maxWidth: '280px', maxHeight: '300px', objectFit: 'cover', display: 'block' }} />
                                             ) : (
-                                                <p className="text-sm">{msg.content}</p>
+                                                <p style={{ fontSize: '14px', color: isMe ? '#fff' : 'var(--color-text)', lineHeight: 1.4 }}>{msg.content}</p>
                                             )}
-                                            <div className={`flex items-center gap-1 ${isImage ? 'px-2 pb-1' : ''} mt-1 justify-end`}>
-                                                <span className="text-[10px] opacity-60">
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '4px', gap: '2px' }}>
+                                                <span style={{ fontSize: '10px', color: isMe ? 'rgba(255,255,255,0.5)' : 'var(--color-text-muted)' }}>
                                                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                                 {isMe && renderTicks(msg)}
@@ -269,36 +349,52 @@ export default function ChatPage() {
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 glass-strong border-t border-primary/10">
-                            <div className="flex gap-2 items-end">
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="p-2.5 rounded-xl hover:bg-surface-3 transition-colors text-text-muted hover:text-text"
-                                    title="Send image"
-                                >
-                                    📷
+                        <div style={{
+                            display: 'flex', alignItems: 'flex-end', gap: '8px',
+                            padding: '12px 16px', borderTop: '1px solid var(--color-border)',
+                            backgroundColor: 'var(--color-surface-2)',
+                        }}>
+                            <button onClick={() => fileInputRef.current?.click()}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
+                                <Camera size={20} strokeWidth={1.8} />
+                            </button>
+                            <input value={newMessage} onChange={e => handleTyping(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                                placeholder="Message"
+                                style={{
+                                    flex: 1, padding: '10px 16px', borderRadius: '999px',
+                                    backgroundColor: 'var(--color-surface-3)',
+                                    border: '1px solid var(--color-border)',
+                                    color: 'var(--color-text)', fontSize: '14px', outline: 'none',
+                                    fontFamily: 'inherit',
+                                }}
+                            />
+                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
+                                <Smile size={20} strokeWidth={1.8} />
+                            </button>
+                            {uploading ? (
+                                <div style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                                    <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                                </div>
+                            ) : (
+                                <button onClick={sendMessage} disabled={!newMessage.trim()}
+                                    style={{
+                                        width: '36px', height: '36px', borderRadius: '50%',
+                                        backgroundColor: newMessage.trim() ? 'var(--color-primary)' : 'var(--color-surface-4)',
+                                        border: 'none', cursor: newMessage.trim() ? 'pointer' : 'default',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        transition: 'background 0.2s',
+                                    }}>
+                                    <Send size={16} color="#fff" strokeWidth={2} />
                                 </button>
-                                <input type="text" value={newMessage}
-                                    onChange={(e) => handleTyping(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                                    placeholder="Type a message..."
-                                    className="flex-1 px-5 py-3 rounded-xl bg-surface-3 border border-primary/10 text-text placeholder-text-muted/50 focus:border-primary/40 focus:outline-none text-sm" />
-                                {uploading ? (
-                                    <div className="px-5 py-3 text-text-muted animate-spin">⏳</div>
-                                ) : (
-                                    <button onClick={sendMessage} disabled={!newMessage.trim()}
-                                        className="btn-primary px-5 py-3 disabled:opacity-50">
-                                        ➤
-                                    </button>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center text-text-muted">
-                        <div className="text-center">
-                            <div className="text-5xl mb-4">💬</div>
-                            <p>Select a conversation</p>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <MessageCircle size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
+                            <p style={{ fontSize: '16px' }}>Select a conversation</p>
                         </div>
                     </div>
                 )}

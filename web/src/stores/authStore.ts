@@ -25,7 +25,7 @@ interface AuthState {
     login: (email: string) => Promise<void>;
     verifyOTP: (email: string, otp: string) => Promise<boolean>;
     fetchUser: () => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
@@ -56,7 +56,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
-    logout: () => {
+    logout: async () => {
+        try { await api.post('/auth/logout'); } catch { /* best effort */ }
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         set({ user: null, isAuthenticated: false });

@@ -1,256 +1,125 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Image, ActivityIndicator, Dimensions } from 'react-native';
+import {
+    View, Text, FlatList, TextInput, TouchableOpacity,
+    StyleSheet, Dimensions, ScrollView, RefreshControl, Image
+} from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { io, Socket } from 'socket.io-client';
-import * as ImagePicker from 'expo-image-picker';
 import * as SecureStore from 'expo-secure-store';
 import api, { BASE_URL } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { theme } from '../utils/theme';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 export default function ChatScreen() {
+    const navigation = useNavigation<any>();
     const [chats, setChats] = useState<any[]>([]);
-    const [activeChat, setActiveChat] = useState<string | null>(null);
-    const [messages, setMessages] = useState<any[]>([]);
-    const [text, setText] = useState('');
     const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
-    const [typingUserId, setTypingUserId] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const { user } = useAuthStore();
     const socketRef = useRef<Socket | null>(null);
-    const flatListRef = useRef<FlatList>(null);
-    const typingTimeoutRef = useRef<any>(null);
 
     useEffect(() => {
         fetchChats();
-        initSocket();
-        return () => { socketRef.current?.disconnect(); };
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            initSocket();
+            fetchChats(); // Refresh list when returning to tab
+            return () => { socketRef.current?.disconnect(); socketRef.current = null; };
+        }, [])
+    );
 
     const initSocket = async () => {
         const token = await SecureStore.getItemAsync('accessToken');
-        const s = io(BASE_URL, {
-            auth: { token },
-            transports: ['websocket'],
-        });
+        const s = io(BASE_URL, { auth: { token }, transports: ['websocket'] });
         socketRef.current = s;
 
-        s.on('connect', () => console.log('Socket connected'));
-        s.on('connect_error', (err: any) => console.log('Socket error:', err.message));
-
-        // Online status
-        s.on('online_users', (userIds: string[]) => setOnlineUserIds(new Set(userIds)));
-        s.on('user_online', ({ userId: uid }: { userId: string }) => {
-            setOnlineUserIds((prev) => new Set(prev).add(uid));
-        });
-        s.on('user_offline', ({ userId: uid }: { userId: string }) => {
-            setOnlineUserIds((prev) => { const n = new Set(prev); n.delete(uid); return n; });
-        });
-
-        // Messages
-        s.on('new_message', (msg: any) => {
-            setMessages((prev) => [...prev, msg]);
-        });
-
-        // Message status updates (delivered)
-        s.on('message_status_update', ({ messageId, status }: { messageId: string; status: string }) => {
-            setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, status } : m));
-        });
-
-        // Messages read (blue ticks)
-        s.on('messages_read', ({ chatId }: { chatId: string }) => {
-            setMessages((prev) => prev.map((m) =>
-                m.chatId === chatId && (typeof m.sender === 'string' ? m.sender : m.sender?._id) === user?._id
-                    ? { ...m, status: 'read' } : m
-            ));
-        });
-
-        // Typing
-        s.on('user_typing', ({ userId: uid, isTyping }: { userId: string; isTyping: boolean }) => {
-            setTypingUserId(isTyping ? uid : null);
-        });
+        s.on('online_users', (ids: string[]) => setOnlineUserIds(new Set(ids)));
+        s.on('user_online', ({ userId: uid }: any) => setOnlineUserIds(p => new Set(p).add(uid)));
+        s.on('user_offline', ({ userId: uid }: any) => setOnlineUserIds(p => { const n = new Set(p); n.delete(uid); return n; }));
+        // Just listen for list updates
+        s.on('new_message', () => fetchChats());
     };
 
     const fetchChats = async () => {
-        try { const { data } = await api.get('/chats'); setChats(data.data || []); } catch { }
-    };
-
-    const openChat = async (chatId: string) => {
-        setActiveChat(chatId);
-        socketRef.current?.emit('join_chat', chatId);
         try {
-            const { data } = await api.get(`/chats/${chatId}/messages`);
-            setMessages(data.data || []);
-            // Mark as read
-            await api.put(`/chats/${chatId}/seen`);
-            socketRef.current?.emit('mark_seen', { chatId });
+            const { data } = await api.get('/chats');
+            setChats(data.data || []);
         } catch { }
+        setRefreshing(false);
     };
 
-    const goBack = () => {
-        if (activeChat) {
-            socketRef.current?.emit('leave_chat', activeChat);
-            socketRef.current?.emit('typing', { chatId: activeChat, isTyping: false });
-        }
-        setActiveChat(null);
-        setMessages([]);
-        setTypingUserId(null);
+    const onRefresh = () => {
+        setRefreshing(true);
         fetchChats();
     };
 
-    const send = () => {
-        if (!text.trim() || !activeChat) return;
-        socketRef.current?.emit('send_message', { chatId: activeChat, content: text.trim() });
-        setText('');
-        socketRef.current?.emit('typing', { chatId: activeChat, isTyping: false });
-    };
-
-    const handleTextChange = (value: string) => {
-        setText(value);
-        if (activeChat) {
-            socketRef.current?.emit('typing', { chatId: activeChat, isTyping: value.length > 0 });
-            clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = setTimeout(() => {
-                socketRef.current?.emit('typing', { chatId: activeChat, isTyping: false });
-            }, 3000);
-        }
-    };
-
-    const pickImage = async (fromCamera: boolean) => {
-        if (!activeChat) return;
-
-        const permission = fromCamera
-            ? await ImagePicker.requestCameraPermissionsAsync()
-            : await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!permission.granted) return;
-
-        const result = fromCamera
-            ? await ImagePicker.launchCameraAsync({ base64: true, quality: 0.7, allowsEditing: true })
-            : await ImagePicker.launchImageLibraryAsync({ base64: true, quality: 0.7, allowsEditing: true, mediaTypes: ['images'] });
-
-        if (result.canceled || !result.assets?.[0]?.base64) return;
-
-        setUploading(true);
-        try {
-            const base64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
-            const { data } = await api.post(`/chats/${activeChat}/image`, { image: base64 });
-            if (data.data) {
-                // The server will emit the message via socket
-            }
-        } catch (err) {
-            console.log('Image upload error:', err);
-        }
-        setUploading(false);
+    const openChat = (chatId: string) => {
+        const chat = chats.find(c => c._id === chatId);
+        const other = getOther(chat);
+        navigation.navigate('ChatDetail', { chatId, otherUser: other });
     };
 
     const getOther = (chat: any) => chat.participants?.find((p: any) => p._id !== user?._id) || {};
-    const getSenderId = (msg: any) => typeof msg.sender === 'string' ? msg.sender : msg.sender?._id;
 
-    const renderTicks = (msg: any) => {
-        const status = msg.status || (msg.seen ? 'read' : 'sent');
-        if (status === 'read') return <Text style={styles.tickBlue}>✓✓</Text>;
-        if (status === 'delivered') return <Text style={styles.tickGray}>✓✓</Text>;
-        return <Text style={styles.tickGray}>✓</Text>;
-    };
+    // ── Chat List ──
+    const matches = chats.slice(0, 8); // show first 8 as "matches"
 
-    // ===== Active Chat View =====
-    if (activeChat) {
-        const otherUser = chats.find((c) => c._id === activeChat)?.participants?.find((p: any) => p._id !== user?._id);
-        const isOtherOnline = otherUser ? onlineUserIds.has(otherUser._id) : false;
-
-        return (
-            <KeyboardAvoidingView
-                style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-            >
-                {/* Header */}
-                <View style={styles.chatHeader}>
-                    <TouchableOpacity onPress={goBack} style={styles.backBtnTouch}>
-                        <Text style={styles.backBtn}>←</Text>
-                    </TouchableOpacity>
-                    <View style={styles.headerAvatar}>
-                        <Text style={styles.headerInitial}>{otherUser?.name?.[0] || '?'}</Text>
-                        {isOtherOnline && <View style={styles.onlineDot} />}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.chatTitle}>{otherUser?.name || 'Chat'}</Text>
-                        {typingUserId ? (
-                            <Text style={styles.typingText}>typing...</Text>
-                        ) : (
-                            <Text style={styles.statusText}>{isOtherOnline ? 'Online' : 'Offline'}</Text>
-                        )}
-                    </View>
-                </View>
-
-                {/* Messages */}
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    keyExtractor={(item, idx) => item._id || `msg-${idx}`}
-                    contentContainerStyle={{ padding: 12, paddingBottom: 4 }}
-                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                    onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-                    renderItem={({ item }) => {
-                        const isMe = getSenderId(item) === user?._id;
-                        const isImage = item.type === 'image' && item.imageUrl;
-                        return (
-                            <View style={[styles.msgRow, isMe && styles.msgRowMe]}>
-                                <View style={[styles.msgBubble, isMe ? styles.myMsg : styles.theirMsg, isImage && styles.imgBubble]}>
-                                    {isImage ? (
-                                        <Image source={{ uri: item.imageUrl }} style={styles.chatImage} resizeMode="cover" />
-                                    ) : (
-                                        <Text style={[styles.msgText, isMe && styles.myMsgText]}>{item.content}</Text>
-                                    )}
-                                    <View style={styles.msgMeta}>
-                                        <Text style={[styles.msgTime, isMe && styles.myMsgTime]}>
-                                            {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </Text>
-                                        {isMe && renderTicks(item)}
-                                    </View>
-                                </View>
-                            </View>
-                        );
-                    }}
-                />
-
-                {/* Input Row */}
-                <View style={styles.inputRow}>
-                    <TouchableOpacity style={styles.attachBtn} onPress={() => pickImage(false)}>
-                        <Text style={styles.attachText}>🖼️</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.attachBtn} onPress={() => pickImage(true)}>
-                        <Text style={styles.attachText}>📷</Text>
-                    </TouchableOpacity>
-                    <TextInput
-                        style={styles.msgInput}
-                        value={text}
-                        onChangeText={handleTextChange}
-                        placeholder="Message..."
-                        placeholderTextColor={theme.colors.textMuted}
-                        multiline
-                    />
-                    {uploading ? (
-                        <ActivityIndicator color={theme.colors.primary} style={{ marginHorizontal: 12 }} />
-                    ) : (
-                        <TouchableOpacity style={styles.sendBtn} onPress={send} disabled={!text.trim()}>
-                            <Text style={styles.sendText}>➤</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </KeyboardAvoidingView>
-        );
-    }
-
-    // ===== Chat List View =====
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Messages</Text>
+        <View style={s.container}>
+            {/* Header */}
+            <View style={s.listHeader}>
+                <Text style={s.listTitle}>Messages</Text>
+            </View>
+
             <FlatList
                 data={chats}
                 keyExtractor={(item) => item._id}
-                contentContainerStyle={{ paddingHorizontal: 0 }}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+                ListHeaderComponent={
+                    <>
+                        {/* Matches row */}
+                        {matches.length > 0 && (
+                            <View style={s.matchesSection}>
+                                <Text style={s.matchesLabel}>MATCHES</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.matchesRow}>
+                                    {matches.map((chat) => {
+                                        const other = getOther(chat);
+                                        const isOnline = other._id ? onlineUserIds.has(other._id) : false;
+                                        return (
+                                            <TouchableOpacity key={chat._id} style={s.matchItem} onPress={() => openChat(chat._id)}>
+                                                <TouchableOpacity style={s.matchAvatarWrap} onPress={() => navigation.navigate('UserProfile', { userId: other._id })}>
+                                                    {other.photos?.[0] ? (
+                                                        <Image source={{ uri: other.photos[0] }} style={{ width: 56, height: 56, borderRadius: 28 }} />
+                                                    ) : (
+                                                        <View style={s.matchAvatar}>
+                                                            <Text style={s.matchInitial}>{other.name?.[0] || '?'}</Text>
+                                                        </View>
+                                                    )}
+                                                    {isOnline && <View style={s.matchOnlineDot} />}
+                                                </TouchableOpacity>
+                                                <Text style={s.matchName} numberOfLines={1}>{other.name?.split(' ')[0] || 'User'}</Text>
+                                                <Text style={s.matchAge}>{other.year ? `${other.year}` : ''}</Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </ScrollView>
+                            </View>
+                        )}
+
+                        {/* Search */}
+                        <View style={s.searchWrap}>
+                            <Text style={s.searchIcon}>🔍</Text>
+                            <TextInput
+                                style={s.searchInput}
+                                placeholder="Search"
+                                placeholderTextColor={theme.colors.textMuted}
+                            />
+                        </View>
+                    </>
+                }
                 ListEmptyComponent={
                     <View style={{ alignItems: 'center', paddingTop: 60 }}>
                         <Text style={{ fontSize: 40, marginBottom: 12 }}>💬</Text>
@@ -260,18 +129,23 @@ export default function ChatScreen() {
                 }
                 renderItem={({ item }) => {
                     const other = getOther(item);
-                    const isOnline = other._id ? onlineUserIds.has(other._id) : false;
                     return (
-                        <TouchableOpacity style={styles.chatItem} onPress={() => openChat(item._id)}>
-                            <View style={styles.chatAvatarWrap}>
-                                <View style={styles.chatAvatar}>
-                                    <Text style={styles.chatInitial}>{other.name?.[0] || '?'}</Text>
-                                </View>
-                                {isOnline && <View style={styles.listOnlineDot} />}
-                            </View>
+                        <TouchableOpacity style={s.chatItem} onPress={() => openChat(item._id)}>
+                            <TouchableOpacity style={s.chatAvatarWrap2} onPress={() => navigation.navigate('UserProfile', { userId: other._id })}>
+                                {other.photos?.[0] ? (
+                                    <Image source={{ uri: other.photos[0] }} style={{ width: 48, height: 48, borderRadius: 24 }} />
+                                ) : (
+                                    <View style={s.chatAvatar}>
+                                        <Text style={s.chatInitial}>{other.name?.[0] || '?'}</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.chatName}>{other.name || 'User'}</Text>
-                                <Text style={styles.chatLast} numberOfLines={1}>{item.lastMessage || 'Say hi!'}</Text>
+                                <View style={s.chatItemTop}>
+                                    <Text style={s.chatName}>{other.name || 'User'}</Text>
+                                    <Text style={s.chatTime}>{item.lastMessageAt ? getTimeAgo(item.lastMessageAt) : ''}</Text>
+                                </View>
+                                <Text style={s.chatLast} numberOfLines={1}>{item.lastMessage || 'Say hi!'}</Text>
                             </View>
                         </TouchableOpacity>
                     );
@@ -281,51 +155,68 @@ export default function ChatScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function getTimeAgo(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hr`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days`;
+    return 'Last week';
+}
+
+const s = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.surface },
-    title: { fontSize: 28, fontWeight: 'bold', color: theme.colors.text, padding: 24, paddingBottom: 8 },
 
-    // Chat list
-    chatItem: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
-    chatAvatarWrap: { position: 'relative' },
-    chatAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(139,92,246,0.2)', justifyContent: 'center', alignItems: 'center' },
-    chatInitial: { fontSize: 18, fontWeight: 'bold', color: theme.colors.primaryLight },
-    chatName: { fontSize: 16, fontWeight: '600', color: theme.colors.text },
-    chatLast: { fontSize: 13, color: theme.colors.textMuted, marginTop: 2 },
-    listOnlineDot: { position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: theme.colors.surface },
+    listHeader: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
+    listTitle: { fontSize: 28, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.5 },
 
-    // Chat header
-    chatHeader: { flexDirection: 'row', alignItems: 'center', padding: 12, paddingHorizontal: 16, gap: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
-    backBtnTouch: { padding: 4 },
-    backBtn: { fontSize: 24, color: theme.colors.text },
-    headerAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(139,92,246,0.2)', justifyContent: 'center', alignItems: 'center', position: 'relative' },
-    headerInitial: { fontSize: 16, fontWeight: 'bold', color: theme.colors.primaryLight },
-    onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 2, borderColor: theme.colors.surface },
-    chatTitle: { fontSize: 16, fontWeight: '600', color: theme.colors.text },
-    typingText: { fontSize: 12, color: '#22C55E', fontStyle: 'italic' },
-    statusText: { fontSize: 12, color: theme.colors.textMuted },
+    matchesSection: { paddingTop: 16, paddingBottom: 8 },
+    matchesLabel: { fontSize: 11, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 1.5, paddingHorizontal: 20, marginBottom: 12 },
+    matchesRow: { paddingHorizontal: 16, gap: 12 },
+    matchItem: { alignItems: 'center', width: 64 },
+    matchAvatarWrap: { position: 'relative', marginBottom: 6 },
+    matchAvatar: {
+        width: 60, height: 60, borderRadius: 30,
+        backgroundColor: theme.colors.surface3,
+        borderWidth: 2, borderColor: theme.colors.primary,
+        justifyContent: 'center', alignItems: 'center',
+    },
+    matchInitial: { fontSize: 22, fontWeight: '700', color: theme.colors.primaryLight },
+    matchOnlineDot: {
+        position: 'absolute', bottom: 1, right: 1,
+        width: 12, height: 12, borderRadius: 6,
+        backgroundColor: theme.colors.success,
+        borderWidth: 2, borderColor: theme.colors.surface,
+    },
+    matchName: { fontSize: 12, fontWeight: '600', color: theme.colors.text, textAlign: 'center' },
+    matchAge: { fontSize: 11, color: theme.colors.textMuted, textAlign: 'center' },
 
-    // Messages
-    msgRow: { flexDirection: 'row', marginBottom: 6 },
-    msgRowMe: { justifyContent: 'flex-end' },
-    msgBubble: { maxWidth: '78%', padding: 10, paddingBottom: 4, borderRadius: 16 },
-    imgBubble: { padding: 4, paddingBottom: 4 },
-    myMsg: { backgroundColor: theme.colors.primary, borderBottomRightRadius: 4 },
-    theirMsg: { backgroundColor: theme.colors.surface2, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: theme.colors.border },
-    msgText: { color: theme.colors.text, fontSize: 14, lineHeight: 20 },
-    myMsgText: { color: '#fff' },
-    chatImage: { width: SCREEN_WIDTH * 0.55, height: SCREEN_WIDTH * 0.55 * 0.75, borderRadius: 12 },
-    msgMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 2 },
-    msgTime: { fontSize: 10, color: theme.colors.textMuted, opacity: 0.7 },
-    myMsgTime: { color: 'rgba(255,255,255,0.6)' },
-    tickGray: { fontSize: 10, color: 'rgba(255,255,255,0.5)' },
-    tickBlue: { fontSize: 10, color: '#60A5FA' },
+    searchWrap: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: theme.colors.surface2,
+        marginHorizontal: 16, marginVertical: 12,
+        borderRadius: 12, paddingHorizontal: 14,
+        borderWidth: 1, borderColor: theme.colors.border,
+    },
+    searchIcon: { fontSize: 14, marginRight: 8, opacity: 0.5 },
+    searchInput: { flex: 1, paddingVertical: 12, color: theme.colors.text, fontSize: 15 },
 
-    // Input
-    inputRow: { flexDirection: 'row', padding: 8, gap: 6, borderTopWidth: 1, borderTopColor: theme.colors.border, alignItems: 'flex-end' },
-    attachBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-    attachText: { fontSize: 20 },
-    msgInput: { flex: 1, backgroundColor: theme.colors.surface3, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, color: theme.colors.text, fontSize: 14, maxHeight: 100 },
-    sendBtn: { backgroundColor: theme.colors.primary, borderRadius: 20, width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-    sendText: { color: '#fff', fontSize: 16 },
+    chatItem: {
+        flexDirection: 'row', alignItems: 'center',
+        paddingHorizontal: 20, paddingVertical: 14, gap: 14,
+    },
+    chatAvatarWrap2: { position: 'relative' },
+    chatAvatar: {
+        width: 52, height: 52, borderRadius: 26,
+        backgroundColor: theme.colors.surface3,
+        justifyContent: 'center', alignItems: 'center',
+    },
+    chatInitial: { fontSize: 20, fontWeight: '700', color: theme.colors.primaryLight },
+    chatItemTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
+    chatName: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
+    chatTime: { fontSize: 12, color: theme.colors.textMuted },
+    chatLast: { fontSize: 13, color: theme.colors.textMuted },
 });

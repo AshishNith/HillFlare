@@ -47,7 +47,7 @@ export default function OTPVerifyPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 bg-surface relative">
-            <div className="absolute w-[500px] h-[500px] rounded-full opacity-15 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            <div className="absolute w-125 h-125 rounded-full opacity-15 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 style={{ background: 'radial-gradient(circle, #EC4899 0%, transparent 70%)' }} />
 
             <motion.div

@@ -98,7 +98,7 @@ export default function DashboardPage() {
                     {actions.map((action, i) => (
                         <motion.div key={action.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.08 }}>
                             <Link to={action.path}
-                                className="glass-card rounded-2xl p-5 flex items-center gap-4 group block">
+                                className="glass-card rounded-2xl p-5 flex items-center gap-4 group">
                                 <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform duration-300"
                                     style={{ background: 'rgba(139,92,246,0.1)' }}>
                                     {action.icon}

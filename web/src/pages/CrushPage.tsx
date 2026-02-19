@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Search, X } from 'lucide-react';
 import api from '../services/api';
 
 interface CrushEntry {
@@ -12,10 +13,13 @@ interface RevealedUser {
 }
 
 interface BrowseUser {
-    _id: string; name: string; department: string; year: number; interests: string[];
+    _id: string; name: string; department: string; year: number; interests: string[]; photos: string[]; avatar: string;
 }
 
+import { useNavigate } from 'react-router-dom';
+
 export default function CrushPage() {
+    const navigate = useNavigate();
     const [crushes, setCrushes] = useState<CrushEntry[]>([]);
     const [revealed, setRevealed] = useState<RevealedUser[]>([]);
     const [browseUsers, setBrowseUsers] = useState<BrowseUser[]>([]);
@@ -103,7 +107,7 @@ export default function CrushPage() {
             </motion.div>
 
             {/* Crush slots */}
-            <motion.div className="rounded-2xl p-6 mb-8" style={{ background: 'linear-gradient(135deg, rgba(19,14,34,0.7), rgba(28,21,51,0.5))', border: '1px solid rgba(139,92,246,0.1)' }}
+            <motion.div className="glass-card rounded-2xl p-6 mb-8"
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <div className="flex items-center justify-between mb-5">
                     <h2 className="text-base font-bold flex items-center gap-2">
@@ -124,32 +128,38 @@ export default function CrushPage() {
                         const crush = crushes[slot];
                         return (
                             <motion.div key={slot}
-                                className="rounded-2xl p-4 text-center relative overflow-hidden"
-                                style={crush
-                                    ? { background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.05))', border: '1px solid rgba(236,72,153,0.15)' }
-                                    : { border: '2px dashed rgba(155,143,199,0.12)', background: 'rgba(28,21,51,0.3)' }
-                                }
+                                className={`rounded-2xl p-4 text-center relative overflow-hidden group cursor-pointer transition-all duration-300 ${crush ? 'bg-surface-3/50' : 'bg-surface-2/30 border-2 border-dashed border-white/5'}`}
+                                style={crush ? { border: '1px solid rgba(236,72,153,0.15)' } : {}}
                                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: slot * 0.08 }}
-                                whileHover={crush ? { y: -2 } : {}}
+                                whileHover={crush ? { y: -2, boxShadow: '0 8px 20px -6px rgba(236,72,153,0.15)' } : {}}
+                                onClick={() => crush && navigate(`/user/${crush.crushUserId._id}`)}
                             >
                                 {crush ? (
                                     <div className="relative z-10">
-                                        <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center text-lg font-bold"
-                                            style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(139,92,246,0.15))', color: '#F472B6' }}>
-                                            {crush.crushUserId?.name?.[0] || '?'}
+                                        <div className="w-16 h-16 rounded-full mx-auto mb-3 p-0.5 relative group-hover:scale-105 transition-transform duration-300"
+                                            style={{ background: 'linear-gradient(135deg, #EC4899, #8B5CF6)' }}>
+                                            {crush.crushUserId.photos?.[0] || crush.crushUserId.avatar ? (
+                                                <img src={crush.crushUserId.photos?.[0] || crush.crushUserId.avatar} alt={crush.crushUserId.name}
+                                                    className="w-full h-full rounded-full object-cover border-2 border-[#130E22]" />
+                                            ) : (
+                                                <div className="w-full h-full rounded-full bg-surface-3 flex items-center justify-center text-xl font-bold text-white">
+                                                    {crush.crushUserId.name?.[0]}
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 rounded-full ring-2 ring-white/10 ring-offset-2 ring-offset-[#130E22] opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </div>
                                         <p className="text-sm font-medium truncate mb-1">{crush.crushUserId?.name}</p>
-                                        <p className="text-[11px] text-text-muted mb-2">{crush.crushUserId?.department}</p>
-                                        <button onClick={() => removeCrush(crush.crushUserId._id)}
-                                            className="text-[11px] text-text-muted/50 hover:text-danger transition-colors">
+                                        <p className="text-[11px] text-text-muted mb-3">{crush.crushUserId?.department}</p>
+                                        <button onClick={(e) => { e.stopPropagation(); removeCrush(crush.crushUserId._id); }}
+                                            className="text-[10px] font-medium text-text-muted hover:text-danger transition-colors bg-surface-2 px-2 py-1 rounded-full border border-white/5 hover:border-danger/20">
                                             Remove
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-3 text-text-muted/25">
-                                        <span className="text-3xl mb-2 animate-float" style={{ animationDelay: `${slot * 0.5}s` }}>💜</span>
-                                        <span className="text-[11px]">Empty slot</span>
+                                    <div className="flex flex-col items-center justify-center py-4 text-text-muted/20 group-hover:text-text-muted/40 transition-colors">
+                                        <span className="text-3xl mb-2 grayscale group-hover:grayscale-0 transition-all duration-300 opacity-50 group-hover:opacity-100 group-hover:scale-110 transform">💜</span>
+                                        <span className="text-[11px] font-medium">Empty Slot</span>
                                     </div>
                                 )}
                             </motion.div>
@@ -160,23 +170,31 @@ export default function CrushPage() {
 
             {/* Revealed crushes */}
             {revealed.length > 0 && (
-                <motion.div className="rounded-2xl p-6 mb-8"
-                    style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.05))', border: '1px solid rgba(236,72,153,0.15)', boxShadow: '0 0 30px rgba(236,72,153,0.08)' }}
+                <motion.div className="glass-card rounded-2xl p-6 mb-8 border-pink-500/20 bg-pink-500/5"
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                     <h2 className="text-base font-bold mb-4 flex items-center gap-2">
                         <span className="text-lg">💘</span> Mutual Reveals
                     </h2>
                     <div className="space-y-3">
                         {revealed.map((user) => (
-                            <div key={user._id} className="flex items-center gap-4 p-3 rounded-xl" style={{ background: 'rgba(236,72,153,0.06)' }}>
-                                <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-bold"
-                                    style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(139,92,246,0.15))', color: '#F472B6' }}>
-                                    {user.name?.[0]}
+                            <div key={user._id} className="glass-card flex items-center gap-4 p-3 rounded-xl hover:bg-surface-3/50 transition-colors cursor-pointer group"
+                                onClick={() => navigate(`/user/${user._id}`)}>
+                                <div className="w-12 h-12 rounded-full p-0.5"
+                                    style={{ background: 'linear-gradient(135deg, #EC4899, #8B5CF6)' }}>
+                                    {user.photos?.[0] || user.avatar ? (
+                                        <img src={user.photos?.[0] || user.avatar} alt={user.name}
+                                            className="w-full h-full rounded-full object-cover border-2 border-[#130E22]" />
+                                    ) : (
+                                        <div className="w-full h-full rounded-full bg-surface-3 flex items-center justify-center text-white font-bold">
+                                            {user.name?.[0]}
+                                        </div>
+                                    )}
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-sm">{user.name}</p>
+                                <div className="flex-1">
+                                    <p className="font-semibold text-sm group-hover:text-primary-light transition-colors">{user.name}</p>
                                     <p className="text-text-muted text-xs">{user.department} • Year {user.year}</p>
                                 </div>
+                                <span className="text-2xl opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">👉</span>
                             </div>
                         ))}
                     </div>
@@ -185,48 +203,63 @@ export default function CrushPage() {
 
             {/* Browse profiles to add crush */}
             {slotsUsed < 3 && (
-                <motion.div className="rounded-2xl p-6"
-                    style={{ background: 'linear-gradient(135deg, rgba(19,14,34,0.7), rgba(28,21,51,0.5))', border: '1px solid rgba(139,92,246,0.1)' }}
+                <motion.div className="glass-card rounded-2xl p-6"
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                    <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+                    <h2 className="text-base font-bold mb-5 flex items-center gap-2">
                         <span className="w-1 h-4 rounded-full" style={{ background: 'linear-gradient(180deg, #8B5CF6, #EC4899)' }} />
                         Add a Crush
                     </h2>
 
                     {!browsing ? (
-                        <button onClick={loadBrowseProfiles} className="btn-accent w-full py-3.5 text-sm">
+                        <button onClick={loadBrowseProfiles} className="btn-primary w-full py-3.5 text-sm justify-center">
                             🔍 Browse Profiles
                         </button>
                     ) : (
                         <>
-                            <input
-                                type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by name or department..."
-                                className="input-field mb-4 text-sm"
-                            />
-                            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                            <div className="relative mb-4">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                                <input
+                                    type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search by name or department..."
+                                    className="search-field"
+                                    autoFocus
+                                />
+                                <button onClick={() => setBrowsing(false)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-2 max-h-80 overflow-y-auto pr-1 customize-scrollbar">
                                 {filteredUsers.length > 0 ? filteredUsers.map((user) => (
                                     <motion.div key={user._id}
-                                        className="flex items-center justify-between p-3.5 rounded-xl group"
-                                        style={{ background: 'rgba(28,21,51,0.5)', border: '1px solid rgba(139,92,246,0.08)' }}
-                                        whileHover={{ borderColor: 'rgba(139,92,246,0.2)' }}>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                                                style={{ background: 'rgba(139,92,246,0.12)', color: '#A78BFA' }}>
-                                                {user.name?.[0]}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-sm">{user.name}</p>
-                                                <p className="text-text-muted text-xs">{user.department} • Year {user.year}</p>
-                                            </div>
+                                        className="list-row rounded-xl group"
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                        onClick={() => navigate(`/user/${user._id}`)}>
+
+                                        <div className="w-10 h-10 rounded-full cursor-pointer relative overflow-hidden" style={{ background: 'var(--color-surface-4)' }}>
+                                            {user.photos?.[0] || user.avatar ? (
+                                                <img src={user.photos?.[0] || user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-primary-light">
+                                                    {user.name?.[0]}
+                                                </div>
+                                            )}
                                         </div>
-                                        <button onClick={() => addCrush(user._id)}
-                                            className="btn-accent px-4 py-2 text-xs !rounded-xl">
-                                            🤫 Pick
+
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm truncate">{user.name}</p>
+                                            <p className="text-text-muted text-xs truncate">{user.department} • Year {user.year}</p>
+                                        </div>
+
+                                        <button onClick={(e) => { e.stopPropagation(); addCrush(user._id); }}
+                                            className="btn-primary py-1.5 px-3 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Pick
                                         </button>
                                     </motion.div>
                                 )) : (
-                                    <p className="text-text-muted text-sm text-center py-6">No profiles found</p>
+                                    <div className="text-center py-8">
+                                        <p className="text-text-muted text-sm">No profiles found matching "{search}"</p>
+                                    </div>
                                 )}
                             </div>
                         </>

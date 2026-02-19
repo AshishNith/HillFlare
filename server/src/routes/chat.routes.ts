@@ -140,6 +140,13 @@ router.post('/:chatId/image', authenticate, messageLimiter, async (req: AuthRequ
 
         const populated = await Message.findById(message._id).populate('sender', 'name avatar');
 
+        // Bridge to socket so all participants receive it in real-time
+        try {
+            const { getIO } = await import('../socket');
+            const io = getIO();
+            chat.participants.forEach((pid) => io.to(pid.toString()).emit('new_message', populated));
+        } catch { /* socket may not be ready */ }
+
         res.json({ success: true, data: populated });
     } catch (error) {
         console.error('Image upload error:', error);

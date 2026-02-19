@@ -54,8 +54,11 @@ app.get('/api/health', (_, res) => {
 });
 
 // Error handler
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error('Unhandled error:', err);
+    if (err.name === 'CastError') {
+        return res.status(400).json({ success: false, error: 'Invalid ID format' });
+    }
     res.status(500).json({ success: false, error: 'Internal server error' });
 });
 

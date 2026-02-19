@@ -1,8 +1,53 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import api from '../services/api';
 
 export default function SettingsPage() {
     const { user, logout } = useAuthStore();
+    const navigate = useNavigate();
+    const [notifications, setNotifications] = useState(true);
+    const [profileVisible, setProfileVisible] = useState(true);
+    const [savingPref, setSavingPref] = useState(false);
+    const [deletingAccount, setDeletingAccount] = useState(false);
+
+    useEffect(() => {
+        if (user?.preferences) {
+            setNotifications(user.preferences.notifications ?? true);
+            setProfileVisible(user.preferences.profileVisible ?? true);
+        }
+    }, [user]);
+
+    const handlePrefToggle = async (key: 'notifications' | 'profileVisible', value: boolean) => {
+        const prev = key === 'notifications' ? notifications : profileVisible;
+        if (key === 'notifications') setNotifications(value);
+        else setProfileVisible(value);
+        setSavingPref(true);
+        try {
+            await api.put('/users/preferences', { [key]: value });
+        } catch {
+            if (key === 'notifications') setNotifications(prev);
+            else setProfileVisible(prev);
+        } finally {
+            setSavingPref(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!window.confirm('Are you sure you want to delete your account? This action is permanent and cannot be undone.')) return;
+        if (!window.confirm('Final confirmation: all your data (matches, messages, photos) will be permanently deleted.')) return;
+        setDeletingAccount(true);
+        try {
+            await api.delete('/users/account');
+            logout();
+            navigate('/', { replace: true });
+        } catch (err: any) {
+            alert(err?.response?.data?.message || 'Failed to delete account. Please try again.');
+        } finally {
+            setDeletingAccount(false);
+        }
+    };
 
     return (
         <div className="p-6 lg:p-10 max-w-2xl mx-auto">
@@ -29,19 +74,25 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="glass rounded-2xl p-6">
-                        <h2 className="font-bold text-lg mb-4">Preferences</h2>
+                        <h2 className="font-bold text-lg mb-4">
+                            Preferences {savingPref && <span className="text-xs text-text-muted ml-2">Saving…</span>}
+                        </h2>
                         <div className="space-y-3">
                             <div className="flex justify-between items-center py-2">
                                 <span className="text-text-muted">Notifications</span>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                                    <input type="checkbox" checked={notifications}
+                                        onChange={e => handlePrefToggle('notifications', e.target.checked)}
+                                        className="sr-only peer" />
                                     <div className="w-11 h-6 bg-surface-4 rounded-full peer peer-checked:bg-primary transition-colors" />
                                 </label>
                             </div>
                             <div className="flex justify-between items-center py-2">
                                 <span className="text-text-muted">Profile Visibility</span>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                                    <input type="checkbox" checked={profileVisible}
+                                        onChange={e => handlePrefToggle('profileVisible', e.target.checked)}
+                                        className="sr-only peer" />
                                     <div className="w-11 h-6 bg-surface-4 rounded-full peer peer-checked:bg-primary transition-colors" />
                                 </label>
                             </div>
@@ -59,6 +110,14 @@ export default function SettingsPage() {
 
                     <button onClick={logout} className="w-full py-4 rounded-xl border border-danger/30 text-danger hover:bg-danger/10 transition-all font-semibold">
                         🚪 Logout
+                    </button>
+
+                    <button
+                        onClick={handleDeleteAccount}
+                        disabled={deletingAccount}
+                        className="w-full py-4 rounded-xl bg-danger/10 border border-danger/40 text-danger hover:bg-danger/20 transition-all font-semibold disabled:opacity-50"
+                    >
+                        {deletingAccount ? 'Deleting…' : '🗑️ Delete Account'}
                     </button>
                 </div>
             </motion.div>

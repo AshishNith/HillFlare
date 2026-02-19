@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Modal, ScrollView, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { theme } from '../utils/theme';
 
 export default function CrushScreen() {
+    const navigation = useNavigation<any>();
     const [crushes, setCrushes] = useState<any[]>([]);
     const [revealed, setRevealed] = useState<any[]>([]);
     const [browseUsers, setBrowseUsers] = useState<any[]>([]);
@@ -110,26 +113,36 @@ export default function CrushScreen() {
                     </View>
                 </View>
 
-                <View style={styles.slotsRow}>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
                     {[0, 1, 2].map((slot) => {
                         const crush = crushes[slot];
                         return (
-                            <View key={slot} style={[styles.slot, crush && styles.slotFilled]}>
+                            <View key={slot} style={[styles.slotContainer]}>
                                 {crush ? (
-                                    <TouchableOpacity
-                                        style={styles.slotContent}
-                                        onLongPress={() => removeCrush(crush.crushUserId?._id, crush.crushUserId?.name)}
+                                    <LinearGradient
+                                        colors={['rgba(236,72,153,0.1)', 'rgba(139,92,246,0.05)']}
+                                        style={styles.slotGradient}
                                     >
-                                        <View style={styles.slotAvatar}>
-                                            <Text style={styles.slotInitial}>{crush.crushUserId?.name?.[0] || '?'}</Text>
-                                        </View>
-                                        <Text style={styles.slotName} numberOfLines={1}>{crush.crushUserId?.name}</Text>
-                                        <Text style={styles.slotDept} numberOfLines={1}>{crush.crushUserId?.department}</Text>
-                                        <Text style={styles.removeTip}>Hold to remove</Text>
-                                    </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.slotContent}
+                                            onPress={() => navigation.navigate('UserProfile', { userId: crush.crushUserId?._id })}
+                                            onLongPress={() => removeCrush(crush.crushUserId?._id, crush.crushUserId?.name)}
+                                        >
+                                            {crush.crushUserId?.photos?.[0] || crush.crushUserId?.avatar ? (
+                                                <Image source={{ uri: crush.crushUserId?.photos?.[0] || crush.crushUserId?.avatar }} style={styles.slotImage} />
+                                            ) : (
+                                                <View style={styles.slotAvatar}>
+                                                    <Text style={styles.slotInitial}>{crush.crushUserId?.name?.[0] || '?'}</Text>
+                                                </View>
+                                            )}
+                                            <Text style={styles.slotName} numberOfLines={1}>{crush.crushUserId?.name}</Text>
+                                            <Text style={styles.slotDept} numberOfLines={1}>{crush.crushUserId?.department}</Text>
+                                            <Text style={styles.removeTip}>Hold to remove</Text>
+                                        </TouchableOpacity>
+                                    </LinearGradient>
                                 ) : (
-                                    <View style={styles.slotContent}>
-                                        <Text style={styles.slotEmpty}>💜</Text>
+                                    <View style={[styles.slot, styles.slotEmpty]}>
+                                        <Text style={styles.slotEmptyIcon}>💜</Text>
                                         <Text style={styles.slotEmptyLabel}>Empty</Text>
                                     </View>
                                 )}
@@ -141,18 +154,33 @@ export default function CrushScreen() {
 
             {/* Revealed Crushes */}
             {revealed.length > 0 && (
-                <View style={styles.revealCard}>
+                <View style={styles.sectionCard}>
                     <Text style={styles.revealTitle}>💘 Mutual Reveals</Text>
                     {revealed.map((u: any) => (
-                        <View key={u._id} style={styles.revealItem}>
-                            <View style={styles.revealAvatar}>
-                                <Text style={styles.revealInitial}>{u.name?.[0]}</Text>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.revealName}>{u.name}</Text>
-                                <Text style={styles.revealDept}>{u.department} • Year {u.year}</Text>
-                            </View>
-                        </View>
+                        <LinearGradient
+                            key={u._id}
+                            colors={['rgba(236,72,153,0.1)', 'rgba(139,92,246,0.05)']}
+                            style={styles.revealGradient}
+                        >
+                            <TouchableOpacity style={styles.revealItem} onPress={() => navigation.navigate('UserProfile', { userId: u._id })}>
+                                <LinearGradient
+                                    colors={['#EC4899', '#8B5CF6']}
+                                    style={styles.avatarBorder}
+                                >
+                                    {u.photos?.[0] || u.avatar ? (
+                                        <Image source={{ uri: u.photos?.[0] || u.avatar }} style={styles.revealImage} />
+                                    ) : (
+                                        <View style={styles.revealAvatarPlaceholder}>
+                                            <Text style={styles.revealInitial}>{u.name?.[0]}</Text>
+                                        </View>
+                                    )}
+                                </LinearGradient>
+                                <View style={{ flex: 1, marginLeft: 12 }}>
+                                    <Text style={styles.revealName}>{u.name}</Text>
+                                    <Text style={styles.revealDept}>{u.department} • Year {u.year}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </LinearGradient>
                     ))}
                 </View>
             )}
@@ -180,9 +208,15 @@ export default function CrushScreen() {
                             {filteredUsers.length > 0 ? (
                                 filteredUsers.slice(0, 15).map((u) => (
                                     <View key={u._id} style={styles.browseItem}>
-                                        <View style={styles.browseAvatar}>
-                                            <Text style={styles.browseInitial}>{u.name?.[0]}</Text>
-                                        </View>
+                                        <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: u._id })}>
+                                            {u.photos?.[0] || u.avatar ? (
+                                                <Image source={{ uri: u.photos?.[0] || u.avatar }} style={{ width: 40, height: 40, borderRadius: 20 }} />
+                                            ) : (
+                                                <View style={styles.browseAvatar}>
+                                                    <Text style={styles.browseInitial}>{u.name?.[0]}</Text>
+                                                </View>
+                                            )}
+                                        </TouchableOpacity>
                                         <View style={{ flex: 1 }}>
                                             <Text style={styles.browseName}>{u.name}</Text>
                                             <Text style={styles.browseDept}>{u.department} • Year {u.year}</Text>
@@ -207,7 +241,7 @@ export default function CrushScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface, padding: 20 },
+    container: { flex: 1, backgroundColor: theme.colors.surface, padding: 20, marginTop: 30 },
     title: { fontSize: 28, fontWeight: 'bold', color: theme.colors.text, marginBottom: 4 },
     subtitle: { fontSize: 13, color: theme.colors.textMuted, marginBottom: 24, lineHeight: 18 },
 
@@ -226,23 +260,43 @@ const styles = StyleSheet.create({
     dotFilled: { backgroundColor: '#EC4899' },
     slotCount: { fontSize: 12, color: theme.colors.textMuted, marginLeft: 6 },
 
-    slotsRow: { flexDirection: 'row', gap: 10 },
+    slotContainer: {
+        flex: 1,
+        borderRadius: 16,
+        overflow: 'hidden',
+        minHeight: 130,
+    },
     slot: {
         flex: 1,
         borderRadius: 16,
         borderWidth: 2,
         borderStyle: 'dashed',
         borderColor: 'rgba(139,92,246,0.15)',
-        minHeight: 130,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(28,21,51,0.3)',
+    },
+    slotGradient: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(236,72,153,0.15)',
+        borderRadius: 16,
+    },
+    slotEmpty: {
         justifyContent: 'center',
         alignItems: 'center',
     },
-    slotFilled: {
-        backgroundColor: 'rgba(236,72,153,0.06)',
-        borderStyle: 'solid',
-        borderColor: 'rgba(236,72,153,0.15)',
+    slotContent: { alignItems: 'center', padding: 8, width: '100%' },
+    slotImage: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
     },
-    slotContent: { alignItems: 'center', padding: 8 },
     slotAvatar: {
         width: 44,
         height: 44,
@@ -256,24 +310,35 @@ const styles = StyleSheet.create({
     slotName: { fontSize: 12, fontWeight: '600', color: theme.colors.text, textAlign: 'center' },
     slotDept: { fontSize: 10, color: theme.colors.textMuted, textAlign: 'center', marginTop: 2 },
     removeTip: { fontSize: 9, color: theme.colors.textMuted, marginTop: 6, opacity: 0.5 },
-    slotEmpty: { fontSize: 28, opacity: 0.3, marginBottom: 4 },
+    slotEmptyIcon: { fontSize: 24, opacity: 0.3, marginBottom: 4 },
     slotEmptyLabel: { fontSize: 11, color: theme.colors.textMuted, opacity: 0.4 },
 
-    revealCard: {
-        backgroundColor: 'rgba(236,72,153,0.06)',
+    revealTitle: { fontSize: 16, fontWeight: 'bold', color: '#F472B6', marginBottom: 12 },
+    revealGradient: {
         borderRadius: 16,
-        padding: 20,
-        marginBottom: 16,
         borderWidth: 1,
         borderColor: 'rgba(236,72,153,0.15)',
+        marginBottom: 8,
+        overflow: 'hidden',
     },
-    revealTitle: { fontSize: 16, fontWeight: 'bold', color: '#F472B6', marginBottom: 12 },
-    revealItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-    revealAvatar: {
+    revealItem: { flexDirection: 'row', alignItems: 'center', padding: 12 },
+    avatarBorder: {
+        padding: 2,
+        borderRadius: 22,
+    },
+    revealImage: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(236,72,153,0.15)',
+        borderWidth: 2,
+        borderColor: '#130E22',
+        backgroundColor: '#130E22',
+    },
+    revealAvatarPlaceholder: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#1A1A1A',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -320,7 +385,7 @@ const styles = StyleSheet.create({
     browseName: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
     browseDept: { fontSize: 12, color: theme.colors.textMuted, marginTop: 1 },
     pickBtn: {
-        backgroundColor: theme.colors.accent,
+        backgroundColor: theme.colors.primary,
         borderRadius: 10,
         paddingHorizontal: 14,
         paddingVertical: 8,

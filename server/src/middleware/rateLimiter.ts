@@ -19,3 +19,15 @@ export const messageLimiter = rateLimit({
     max: 30,
     message: { success: false, error: 'Message rate limit exceeded' },
 });
+
+export const swipeLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 60,
+    message: { success: false, error: 'Swipe rate limit exceeded. Slow down!' },
+});
+
+export const crushLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 10,
+    message: { success: false, error: 'Crush rate limit exceeded.' },
+});

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import api from '../services/api';
 
@@ -160,6 +161,12 @@ function SwipeCard({ profile, onSwipe }: { profile: Profile; onSwipe: (type: 'li
                         <span key={interest} className="chip chip-primary text-xs">{interest}</span>
                     ))}
                 </div>
+                <Link to={`/user/${profile._id}`}
+                    onClick={e => e.stopPropagation()}
+                    className="mt-3 block text-center text-xs font-semibold py-2 rounded-lg"
+                    style={{ backgroundColor: 'rgba(139,92,246,0.15)', color: '#A78BFA', textDecoration: 'none' }}>
+                    View Full Profile
+                </Link>
             </div>
         </motion.div>
     );

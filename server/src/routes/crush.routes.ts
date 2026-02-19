@@ -1,12 +1,16 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { crushLimiter } from '../middleware/rateLimiter';
 import { CrushSelection } from '../models/CrushSelection';
 import { Notification } from '../models/Notification';
 
 const router = Router();
 const MAX_CRUSHES = 3;
+
+const isValidId = (id: string) => mongoose.isValidObjectId(id);
 
 const crushSchema = z.object({
     crushUserId: z.string(),
@@ -33,11 +37,16 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response): Promise<v
 });
 
 // Add crush
-router.post('/', authenticate, validate(crushSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', authenticate, crushLimiter, validate(crushSchema), async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!._id;
         const { crushUserId } = req.body;
         const cycleMonth = getCurrentCycleMonth();
+
+        if (!isValidId(crushUserId)) {
+            res.status(400).json({ success: false, error: 'Invalid user ID' });
+            return;
+        }
 
         if (userId.toString() === crushUserId) {
             res.status(400).json({ success: false, error: 'Cannot crush on yourself' });
@@ -88,6 +97,14 @@ router.post('/', authenticate, validate(crushSchema), async (req: AuthRequest, r
                     referenceId: userId,
                 },
             ]);
+
+            // Real-time socket notification
+            try {
+                const { getIO } = await import('../socket');
+                const io = getIO();
+                io.to(userId.toString()).emit('crush_reveal', { otherUserId: crushUserId });
+                io.to(crushUserId).emit('crush_reveal', { otherUserId: userId.toString() });
+            } catch { /* socket may not be ready */ }
         }
 
         res.json({ success: true, data: { isMutual }, message: 'Crush added' });

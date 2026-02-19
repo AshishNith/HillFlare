@@ -5,6 +5,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from './src/store/authStore';
 import LoginScreen from './src/screens/LoginScreen';
 import OTPVerifyScreen from './src/screens/OTPVerifyScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import UserProfileScreen from './src/screens/UserProfileScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
+import ChatDetailScreen from './src/screens/ChatDetailScreen';
 import MainTabs from './src/navigation/MainTabs';
 import { theme } from './src/utils/theme';
 
@@ -24,7 +28,7 @@ const navTheme = {
 };
 
 export default function App() {
-    const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+    const { isAuthenticated, isLoading, checkAuth, user } = useAuthStore();
 
     useEffect(() => { checkAuth(); }, []);
 
@@ -35,7 +39,16 @@ export default function App() {
             <StatusBar style="light" />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {isAuthenticated ? (
-                    <Stack.Screen name="Main" component={MainTabs} />
+                    !user?.isProfileComplete ? (
+                        <Stack.Screen name="CompleteProfile" component={ProfileScreen} initialParams={{ forceEdit: true }} />
+                    ) : (
+                        <>
+                            <Stack.Screen name="Main" component={MainTabs} />
+                            <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+                            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+                        </>
+                    )
                 ) : (
                     <>
                         <Stack.Screen name="Login" component={LoginScreen} />
