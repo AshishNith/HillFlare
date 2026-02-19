@@ -111,7 +111,7 @@ export default function ChatScreen() {
 
                         {/* Search */}
                         <View style={s.searchWrap}>
-                            <Text style={s.searchIcon}>🔍</Text>
+                            <Ionicons name="search-outline" size={16} color={theme.colors.textMuted} />
                             <TextInput
                                 style={s.searchInput}
                                 placeholder="Search"
@@ -122,7 +122,7 @@ export default function ChatScreen() {
                 }
                 ListEmptyComponent={
                     <View style={{ alignItems: 'center', paddingTop: 60 }}>
-                        <Text style={{ fontSize: 40, marginBottom: 12 }}>💬</Text>
+                        <Ionicons name="chatbubble-outline" size={40} color={theme.colors.textSubtle} style={{ marginBottom: 12 }} />
                         <Text style={{ color: theme.colors.textMuted, fontSize: 16 }}>No conversations yet</Text>
                         <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginTop: 4 }}>Match with someone to start chatting!</Text>
                     </View>

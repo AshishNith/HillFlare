@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, Check, Heart, MessageCircle, Info, ShieldAlert } from 'lucide-react';
+import { Bell, Check, Heart, MessageCircle, Info, ShieldAlert, Flame } from 'lucide-react';
 import api from '../services/api';
 import { format } from 'date-fns';
 
@@ -23,9 +23,6 @@ export default function NotificationsPage() {
         try {
             const { data } = await api.get('/notifications');
             setNotifications(data.data);
-            // Mark all as read shortly after loading? Or let user manually mark?
-            // User requested "show it in the notification menu", implied checking it clears it?
-            // For now, let's just show them.
         } catch (error) {
             console.error('Failed to fetch notifications', error);
         } finally {
@@ -46,18 +43,13 @@ export default function NotificationsPage() {
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'match': return <Heart size={20} className="text-pink-500" />;
-            case 'crush_reveal': return <Flame size={20} className="text-purple-500" />;
-            case 'message': return <MessageCircle size={20} className="text-blue-500" />;
-            case 'report_update': return <ShieldAlert size={20} className="text-yellow-500" />;
-            default: return <Info size={20} className="text-gray-500" />;
+            case 'match': return <Heart size={20} className="text-primary-light" />;
+            case 'crush_reveal': return <Flame size={20} className="text-accent" />;
+            case 'message': return <MessageCircle size={20} className="text-success" />;
+            case 'report_update': return <ShieldAlert size={20} className="text-warning" />;
+            default: return <Info size={20} className="text-text-muted" />;
         }
     };
-
-    // Need to import Flame, assuming it's available or use Zap
-    const Flame = ({ size, className }: { size: number, className?: string }) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3.314.943.9 1.8 1.9 2.8z"></path></svg>
-    );
 
     const navigate = useNavigate();
 
@@ -71,7 +63,8 @@ export default function NotificationsPage() {
 
         switch (n.type) {
             case 'match':
-                navigate('/chat'); // Or specific chat if we had chatId
+                if (n.referenceId) navigate(`/user/${n.referenceId}`);
+                else navigate('/chat');
                 break;
             case 'crush_reveal':
                 navigate('/crush');
@@ -91,7 +84,7 @@ export default function NotificationsPage() {
         <div className="max-w-2xl mx-auto p-6 pt-10">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-primary-light" style={{ background: 'rgba(139,92,246,0.1)' }}>
                         <Bell size={20} />
                     </div>
                     <div>

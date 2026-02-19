@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { Heart, X as XIcon, Loader2, PartyPopper } from 'lucide-react';
 import api from '../services/api';
 
 interface Profile {
@@ -39,7 +40,7 @@ export default function SwipePage() {
             {/* Header */}
             <div className="w-full flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold"><span className="text-gradient">Discover</span></h1>
+                    <h1 className="text-2xl font-bold">Discover</h1>
                     <p className="text-text-muted text-xs mt-1">Swipe right to like, left to pass</p>
                 </div>
                 {profiles.length > 0 && (
@@ -57,9 +58,11 @@ export default function SwipePage() {
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
                             transition={{ type: 'spring', damping: 12 }} className="text-center">
-                            <div className="text-8xl mb-4 animate-float">💘</div>
-                            <h2 className="text-4xl font-bold text-gradient mb-2">It's a Match!</h2>
-                            <p className="text-text-muted">You both liked each other ✨</p>
+                            <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.15)' }}>
+                                <Heart size={40} className="text-primary-light" fill="currentColor" />
+                            </div>
+                            <h2 className="text-4xl font-bold text-primary-light mb-2">It's a Match!</h2>
+                            <p className="text-text-muted">You both liked each other</p>
                         </motion.div>
                     </motion.div>
                 )}
@@ -71,17 +74,17 @@ export default function SwipePage() {
                     {currentProfile ? (
                         <SwipeCard key={currentProfile._id} profile={currentProfile} onSwipe={handleSwipe} />
                     ) : loading ? (
-                        <div className="glass rounded-3xl w-full h-full flex items-center justify-center glow-pulse">
+                        <div className="card rounded-3xl w-full h-full flex items-center justify-center">
                             <div className="text-center text-text-muted">
-                                <div className="text-5xl mb-4 animate-float">💜</div>
+                                <Loader2 size={40} className="mx-auto mb-4 animate-spin text-primary" />
                                 <p className="font-medium">Loading profiles...</p>
                             </div>
                         </div>
                     ) : (
-                        <motion.div className="glass rounded-3xl w-full h-full flex items-center justify-center border-gradient"
+                        <motion.div className="card rounded-3xl w-full h-full flex items-center justify-center"
                             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                             <div className="text-center text-text-muted p-8">
-                                <div className="text-6xl mb-4">🎉</div>
+                                <PartyPopper size={48} className="mx-auto mb-4 text-accent" />
                                 <p className="text-xl font-bold mb-2 text-text">All caught up!</p>
                                 <p className="text-sm">Come back later for new profiles</p>
                             </div>
@@ -94,14 +97,14 @@ export default function SwipePage() {
             {currentProfile && (
                 <div className="flex items-center gap-8 mt-8">
                     <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} onClick={() => handleSwipe('pass')}
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-all"
-                        style={{ background: 'rgba(248,113,113,0.1)', border: '2px solid rgba(248,113,113,0.25)', boxShadow: '0 4px 20px rgba(248,113,113,0.1)' }}>
-                        ✕
+                        className="w-16 h-16 rounded-full flex items-center justify-center transition-all"
+                        style={{ background: 'rgba(248,113,113,0.1)', border: '2px solid rgba(248,113,113,0.25)' }}>
+                        <XIcon size={28} className="text-danger" />
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} onClick={() => handleSwipe('like')}
-                        className="w-20 h-20 rounded-full flex items-center justify-center text-3xl transition-all"
-                        style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(236,72,153,0.2))', border: '2px solid rgba(139,92,246,0.3)', boxShadow: '0 4px 20px rgba(139,92,246,0.15)' }}>
-                        💜
+                        className="w-20 h-20 rounded-full flex items-center justify-center transition-all"
+                        style={{ background: 'rgba(139,92,246,0.12)', border: '2px solid rgba(139,92,246,0.3)' }}>
+                        <Heart size={32} className="text-primary-light" fill="currentColor" />
                     </motion.button>
                 </div>
             )}

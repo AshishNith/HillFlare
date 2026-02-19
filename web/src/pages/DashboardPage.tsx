@@ -2,20 +2,20 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Flame, Search, Heart, MessageCircle, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 
 const getGreeting = () => {
     const h = new Date().getHours();
-    if (h < 12) return { text: 'Good morning', emoji: '☀️' };
-    if (h < 17) return { text: 'Good afternoon', emoji: '🌤️' };
-    if (h < 21) return { text: 'Good evening', emoji: '🌙' };
-    return { text: 'Night owl mode', emoji: '🦉' };
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    if (h < 21) return 'Good evening';
+    return 'Good night';
 };
 
 export default function DashboardPage() {
     const user = useAuthStore((s) => s.user);
     const [stats, setStats] = useState({ matches: 0, crushes: 0, chats: 0 });
-    const greeting = getGreeting();
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -34,80 +34,63 @@ export default function DashboardPage() {
     }, []);
 
     const cards = [
-        { icon: '💘', label: 'Matches', value: stats.matches, gradient: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05))', border: 'rgba(139,92,246,0.2)', color: '#A78BFA' },
-        { icon: '🤫', label: 'Active Crushes', value: stats.crushes, gradient: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(236,72,153,0.05))', border: 'rgba(236,72,153,0.2)', color: '#F472B6' },
-        { icon: '💬', label: 'Conversations', value: stats.chats, gradient: 'linear-gradient(135deg, rgba(52,211,153,0.15), rgba(52,211,153,0.05))', border: 'rgba(52,211,153,0.2)', color: '#34D399' },
+        { label: 'Matches', value: stats.matches, color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.15)' },
+        { label: 'Crushes', value: stats.crushes, color: '#F97316', bg: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.15)' },
+        { label: 'Chats', value: stats.chats, color: '#10B981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.15)' },
     ];
 
     const actions = [
-        { icon: '💘', title: 'Start Swiping', desc: 'Discover new people nearby', path: '/swipe', gradient: 'from-purple-500/10 to-pink-500/5' },
-        { icon: '🎯', title: 'Explore by Interest', desc: 'Find compatible matches', path: '/explore', gradient: 'from-blue-500/10 to-purple-500/5' },
-        { icon: '🤫', title: 'Secret Crush', desc: 'Pick your top 3 anonymously', path: '/crush', gradient: 'from-pink-500/10 to-rose-500/5' },
-        { icon: '💬', title: 'Messages', desc: 'Chat with your matches', path: '/chat', gradient: 'from-emerald-500/10 to-teal-500/5' },
+        { icon: Flame, title: 'Discover People', desc: 'Swipe through profiles near you', path: '/swipe', color: '#8B5CF6' },
+        { icon: Search, title: 'Explore by Interest', desc: 'Find compatible matches', path: '/explore', color: '#3B82F6' },
+        { icon: Heart, title: 'Secret Crush', desc: 'Pick your top 3 anonymously', path: '/crush', color: '#F97316' },
+        { icon: MessageCircle, title: 'Messages', desc: 'Chat with your matches', path: '/chat', color: '#10B981' },
     ];
 
     return (
         <div className="p-6 lg:p-10 max-w-5xl mx-auto">
             {/* Greeting */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="text-3xl animate-float">{greeting.emoji}</span>
-                    <div>
-                        <p className="text-sm text-text-muted font-medium">{greeting.text}</p>
-                        <h1 className="text-3xl lg:text-4xl font-bold">
-                            <span className="text-gradient">{user?.name || 'there'}</span>
-                        </h1>
-                    </div>
-                </div>
-                <p className="text-text-muted mt-3 text-sm pl-1">Here's what's happening on your campus today.</p>
+                <p className="text-sm text-text-muted font-medium mb-1">{getGreeting()}</p>
+                <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
+                    {user?.name || 'there'}
+                </h1>
+                <p className="text-text-muted mt-2 text-sm">Here's what's happening on your campus.</p>
             </motion.div>
 
             {/* Stats */}
-            <div className="grid sm:grid-cols-3 gap-5 mb-10">
+            <div className="grid sm:grid-cols-3 gap-4 mb-10">
                 {cards.map((card, i) => (
                     <motion.div
                         key={card.label}
-                        className="rounded-2xl p-6 relative overflow-hidden group cursor-pointer"
-                        style={{ background: card.gradient, border: `1px solid ${card.border}` }}
-                        initial={{ opacity: 0, y: 20 }}
+                        className="rounded-2xl p-6"
+                        style={{ background: card.bg, border: `1px solid ${card.border}` }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        whileHover={{ scale: 1.03, y: -4 }}
+                        transition={{ delay: i * 0.08 }}
                     >
-                        {/* Subtle glow on hover */}
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                            style={{ boxShadow: `inset 0 0 40px ${card.border}` }} />
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="text-2xl">{card.icon}</span>
-                                <span className="text-xs text-text-muted font-medium uppercase tracking-wider">{card.label}</span>
-                            </div>
-                            <p className="text-5xl font-bold" style={{ color: card.color }}>{card.value}</p>
-                        </div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{card.label}</p>
+                        <p className="text-4xl font-bold" style={{ color: card.color }}>{card.value}</p>
                     </motion.div>
                 ))}
             </div>
 
             {/* Quick Actions */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                <h2 className="text-lg font-bold mb-5 flex items-center gap-2">
-                    <span className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #8B5CF6, #EC4899)' }} />
-                    Quick Actions
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <h2 className="text-base font-semibold mb-4 text-text-muted uppercase tracking-wider text-xs">Quick Actions</h2>
+                <div className="grid sm:grid-cols-2 gap-3">
                     {actions.map((action, i) => (
-                        <motion.div key={action.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.08 }}>
+                        <motion.div key={action.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.06 }}>
                             <Link to={action.path}
-                                className="glass-card rounded-2xl p-5 flex items-center gap-4 group">
-                                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform duration-300"
-                                    style={{ background: 'rgba(139,92,246,0.1)' }}>
-                                    {action.icon}
+                                className="card-interactive flex items-center gap-4 p-4 group">
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                                    style={{ background: `${action.color}15` }}>
+                                    <action.icon size={18} color={action.color} strokeWidth={2} />
                                 </div>
-                                <div>
+                                <div className="flex-1 min-w-0">
                                     <p className="font-semibold text-sm group-hover:text-primary-light transition-colors">{action.title}</p>
                                     <p className="text-text-muted text-xs mt-0.5">{action.desc}</p>
                                 </div>
-                                <span className="ml-auto text-text-muted/30 group-hover:text-text-muted group-hover:translate-x-1 transition-all text-lg">→</span>
+                                <ArrowRight size={16} className="text-text-subtle group-hover:text-text-muted group-hover:translate-x-1 transition-all" />
                             </Link>
                         </motion.div>
                     ))}

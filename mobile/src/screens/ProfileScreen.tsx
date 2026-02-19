@@ -425,7 +425,7 @@ const s = StyleSheet.create({
     },
     avatar: {
         width: 62, height: 62, borderRadius: 31,
-        backgroundColor: 'rgba(123,47,255,0.15)',
+        backgroundColor: 'rgba(139,92,246,0.15)',
         justifyContent: 'center', alignItems: 'center',
     },
     avatarImage: {
@@ -492,7 +492,7 @@ const s = StyleSheet.create({
     bioText: { fontSize: 14, color: theme.colors.textMuted, lineHeight: 22 },
     emptyText: { fontSize: 13, color: theme.colors.textSubtle },
 
-    viewChip: { backgroundColor: 'rgba(123,47,255,0.1)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 4 },
+    viewChip: { backgroundColor: 'rgba(139,92,246,0.1)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 4 },
     viewChipText: { fontSize: 12, fontWeight: '500', color: theme.colors.primaryLight },
 
     infoRows: { gap: 10 },
@@ -509,13 +509,13 @@ const s = StyleSheet.create({
 
     chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 4, backgroundColor: theme.colors.surface2 },
-    chipActive: { backgroundColor: 'rgba(123,47,255,0.18)' },
+    chipActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
     chipText: { fontSize: 13, fontWeight: '500', color: theme.colors.textMuted },
     chipTextActive: { color: theme.colors.primaryLight, fontWeight: '600' },
 
     yearRow: { flexDirection: 'row', gap: 10 },
     yearBtn: { width: 44, height: 44, borderRadius: 6, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.surface2 },
-    yearBtnActive: { backgroundColor: 'rgba(123,47,255,0.18)' },
+    yearBtnActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
     yearBtnText: { fontSize: 15, fontWeight: '700', color: theme.colors.textMuted },
     yearBtnTextActive: { color: theme.colors.primaryLight },
 

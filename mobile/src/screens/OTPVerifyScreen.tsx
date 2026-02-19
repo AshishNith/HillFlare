@@ -118,7 +118,7 @@ const s = StyleSheet.create({
         color: theme.colors.text,
     },
     otpBoxFilled: {
-        backgroundColor: 'rgba(123,47,255,0.12)',
+        backgroundColor: 'rgba(139,92,246,0.12)',
         color: theme.colors.primaryLight,
     },
     error: { color: theme.colors.danger, fontSize: 13, marginBottom: 14, textAlign: 'center' },

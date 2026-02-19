@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { LogOut, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import api from '../services/api';
 
 export default function SettingsPage() {
@@ -52,10 +53,10 @@ export default function SettingsPage() {
     return (
         <div className="p-6 lg:p-10 max-w-2xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <h1 className="text-3xl font-bold mb-8"><span className="text-gradient">Settings</span></h1>
+                <h1 className="text-3xl font-bold mb-8">Settings</h1>
 
                 <div className="space-y-6">
-                    <div className="glass rounded-2xl p-6">
+                    <div className="card p-6">
                         <h2 className="font-bold text-lg mb-4">Account</h2>
                         <div className="space-y-3">
                             <div className="flex justify-between items-center py-2">
@@ -68,12 +69,16 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex justify-between items-center py-2">
                                 <span className="text-text-muted">Verified</span>
-                                <span className="text-sm">{user?.isVerified ? '✅ Yes' : '❌ No'}</span>
+                                <span className="text-sm flex items-center gap-1.5">
+                                    {user?.isVerified
+                                        ? <><CheckCircle size={14} className="text-success" /> Yes</>
+                                        : <><XCircle size={14} className="text-danger" /> No</>}
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="glass rounded-2xl p-6">
+                    <div className="card p-6">
                         <h2 className="font-bold text-lg mb-4">
                             Preferences {savingPref && <span className="text-xs text-text-muted ml-2">Saving…</span>}
                         </h2>
@@ -99,7 +104,7 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    <div className="glass rounded-2xl p-6">
+                    <div className="card p-6">
                         <h2 className="font-bold text-lg mb-4">About</h2>
                         <div className="text-text-muted text-sm space-y-2">
                             <p>CampusConnect v1.0.0</p>
@@ -108,16 +113,16 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    <button onClick={logout} className="w-full py-4 rounded-xl border border-danger/30 text-danger hover:bg-danger/10 transition-all font-semibold">
-                        🚪 Logout
+                    <button onClick={logout} className="w-full py-4 rounded-xl border border-danger/30 text-danger hover:bg-danger/10 transition-all font-semibold flex items-center justify-center gap-2">
+                        <LogOut size={16} /> Logout
                     </button>
 
                     <button
                         onClick={handleDeleteAccount}
                         disabled={deletingAccount}
-                        className="w-full py-4 rounded-xl bg-danger/10 border border-danger/40 text-danger hover:bg-danger/20 transition-all font-semibold disabled:opacity-50"
+                        className="w-full py-4 rounded-xl bg-danger/10 border border-danger/40 text-danger hover:bg-danger/20 transition-all font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                        {deletingAccount ? 'Deleting…' : '🗑️ Delete Account'}
+                        <Trash2 size={16} /> {deletingAccount ? 'Deleting…' : 'Delete Account'}
                     </button>
                 </div>
             </motion.div>

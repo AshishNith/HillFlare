@@ -90,8 +90,8 @@ export default function ProfilePage() {
                     {/* Avatar with completion ring */}
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                         <svg width="80" height="80" viewBox="0 0 80 80" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
-                            <circle cx="40" cy="40" r="37" fill="none" stroke="rgba(123,47,255,0.1)" strokeWidth="2" />
-                            <circle cx="40" cy="40" r="37" fill="none" stroke="#7B2FFF" strokeWidth="2.5"
+                            <circle cx="40" cy="40" r="37" fill="none" stroke="rgba(139,92,246,0.1)" strokeWidth="2" />
+                            <circle cx="40" cy="40" r="37" fill="none" stroke="#8B5CF6" strokeWidth="2.5"
                                 strokeDasharray={`${completion * 2.325} 232.5`} strokeLinecap="round" />
                         </svg>
                         {photos.length > 0 ? (
@@ -99,7 +99,7 @@ export default function ProfilePage() {
                         ) : (
                             <div style={{
                                 width: '80px', height: '80px', borderRadius: '50%',
-                                backgroundColor: 'rgba(123,47,255,0.15)',
+                                backgroundColor: 'rgba(139,92,246,0.15)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '26px', fontWeight: 800, color: 'var(--color-primary-light)',
                             }}>{initials}</div>
@@ -248,7 +248,7 @@ export default function ProfilePage() {
                                     <button key={y} onClick={() => setForm({ ...form, year: y })}
                                         style={{
                                             width: '44px', height: '44px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                                            backgroundColor: form.year === y ? 'rgba(123,47,255,0.18)' : 'var(--color-surface-3)',
+                                            backgroundColor: form.year === y ? 'rgba(139,92,246,0.18)' : 'var(--color-surface-3)',
                                             color: form.year === y ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
                                             fontWeight: 700, fontSize: '15px', transition: 'all 0.12s',
                                         }}>{y}</button>
@@ -393,11 +393,11 @@ const chipStyle: React.CSSProperties = {
 };
 
 const chipActiveStyle: React.CSSProperties = {
-    backgroundColor: 'rgba(123,47,255,0.18)', color: 'var(--color-primary-light)',
+    backgroundColor: 'rgba(139,92,246,0.18)', color: 'var(--color-primary-light)',
 };
 
 const viewChipStyle: React.CSSProperties = {
     padding: '5px 12px', borderRadius: '4px',
-    backgroundColor: 'rgba(123,47,255,0.1)', color: 'var(--color-primary-light)',
+    backgroundColor: 'rgba(139,92,246,0.1)', color: 'var(--color-primary-light)',
     fontSize: '12px', fontWeight: 500,
 };

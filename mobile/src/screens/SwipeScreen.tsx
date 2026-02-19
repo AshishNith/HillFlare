@@ -82,7 +82,7 @@ export default function SwipeScreen() {
             {isMatch && (
                 <View style={s.matchOverlay}>
                     <View style={s.matchCard}>
-                        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(123,47,255,0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(139,92,246,0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
                             <Ionicons name="heart" size={36} color={theme.colors.primary} />
                         </View>
                         <Text style={s.matchTitle}>It's a Match!</Text>
@@ -171,7 +171,7 @@ export default function SwipeScreen() {
                             right: {
                                 title: 'LIKE',
                                 style: {
-                                    label: { borderColor: '#22c55e', color: '#22c55e', borderWidth: 4, fontSize: 32, fontWeight: '900', padding: 10, borderRadius: 10 },
+                                    label: { borderColor: '#10B981', color: '#10B981', borderWidth: 4, fontSize: 32, fontWeight: '900', padding: 10, borderRadius: 10 },
                                     wrapper: { flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginTop: 40, marginLeft: 40 }
                                 }
                             }
@@ -182,7 +182,7 @@ export default function SwipeScreen() {
 
             {allSwiped || (profiles.length === 0 && !loading) ? (
                 <View style={s.empty}>
-                    <Text style={{ fontSize: 52, marginBottom: 16 }}>✨</Text>
+                    <Ionicons name="sparkles-outline" size={48} color={theme.colors.accent} style={{ marginBottom: 16 }} />
                     <Text style={s.emptyTitle}>You're all caught up</Text>
                     <Text style={s.emptySub}>Check back later for new profiles</Text>
                     <TouchableOpacity
@@ -317,7 +317,7 @@ const s = StyleSheet.create({
         backgroundColor: theme.colors.surface2,
         borderRadius: 28, padding: 40, alignItems: 'center',
         marginHorizontal: 32,
-        borderWidth: 1, borderColor: 'rgba(123,47,255,0.3)',
+        borderWidth: 1, borderColor: 'rgba(139,92,246,0.3)',
     },
     matchTitle: { fontSize: 28, fontWeight: '800', color: '#fff', marginBottom: 8, letterSpacing: -0.5 },
     matchSub: { fontSize: 15, color: theme.colors.textMuted, marginBottom: 28 },

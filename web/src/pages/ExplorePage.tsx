@@ -181,8 +181,8 @@ export default function ExplorePage() {
                             height: '100%', minHeight: '46px',
                             padding: '0 16px',
                             display: 'flex', alignItems: 'center', gap: '7px',
-                            backgroundColor: filterOpen || activeFilterCount > 0 ? 'rgba(123,47,255,0.12)' : 'var(--color-surface-2)',
-                            border: `1px solid ${filterOpen || activeFilterCount > 0 ? 'rgba(123,47,255,0.3)' : 'transparent'}`,
+                            backgroundColor: filterOpen || activeFilterCount > 0 ? 'rgba(139,92,246,0.12)' : 'var(--color-surface-2)',
+                            border: `1px solid ${filterOpen || activeFilterCount > 0 ? 'rgba(139,92,246,0.3)' : 'transparent'}`,
                             borderRadius: '8px',
                             cursor: 'pointer',
                             color: filterOpen || activeFilterCount > 0 ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
@@ -246,7 +246,7 @@ export default function ExplorePage() {
                                                     style={{
                                                         padding: '5px 12px', borderRadius: '4px', border: 'none', cursor: 'pointer',
                                                         fontSize: '12px', fontWeight: 500, transition: 'all 0.12s',
-                                                        backgroundColor: pendingDept === d ? 'rgba(123,47,255,0.18)' : 'var(--color-surface-3)',
+                                                        backgroundColor: pendingDept === d ? 'rgba(139,92,246,0.18)' : 'var(--color-surface-3)',
                                                         color: pendingDept === d ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
                                                     }}>
                                                     {d}
@@ -265,7 +265,7 @@ export default function ExplorePage() {
                                                     style={{
                                                         padding: '5px 16px', borderRadius: '4px', border: 'none', cursor: 'pointer',
                                                         fontSize: '12px', fontWeight: 500, transition: 'all 0.12s',
-                                                        backgroundColor: pendingYear === y ? 'rgba(123,47,255,0.18)' : 'var(--color-surface-3)',
+                                                        backgroundColor: pendingYear === y ? 'rgba(139,92,246,0.18)' : 'var(--color-surface-3)',
                                                         color: pendingYear === y ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
                                                     }}>
                                                     Year {y}
@@ -284,7 +284,7 @@ export default function ExplorePage() {
                                                     style={{
                                                         padding: '5px 12px', borderRadius: '4px', border: 'none', cursor: 'pointer',
                                                         fontSize: '12px', fontWeight: 500, transition: 'all 0.12s',
-                                                        backgroundColor: pendingInterest === i ? 'rgba(123,47,255,0.18)' : 'var(--color-surface-3)',
+                                                        backgroundColor: pendingInterest === i ? 'rgba(139,92,246,0.18)' : 'var(--color-surface-3)',
                                                         color: pendingInterest === i ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
                                                     }}>
                                                     {i}
@@ -336,19 +336,19 @@ export default function ExplorePage() {
                     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                         style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
                         {appliedDept && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '4px', backgroundColor: 'rgba(123,47,255,0.12)', color: 'var(--color-primary-light)', fontSize: '12px', fontWeight: 500 }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '4px', backgroundColor: 'rgba(139,92,246,0.12)', color: 'var(--color-primary-light)', fontSize: '12px', fontWeight: 500 }}>
                                 {appliedDept}
                                 <button onClick={() => setAppliedDept('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: 0 }}><X size={11} /></button>
                             </span>
                         )}
                         {appliedYear && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '4px', backgroundColor: 'rgba(123,47,255,0.12)', color: 'var(--color-primary-light)', fontSize: '12px', fontWeight: 500 }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '4px', backgroundColor: 'rgba(139,92,246,0.12)', color: 'var(--color-primary-light)', fontSize: '12px', fontWeight: 500 }}>
                                 Year {appliedYear}
                                 <button onClick={() => setAppliedYear('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: 0 }}><X size={11} /></button>
                             </span>
                         )}
                         {appliedInterest && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '4px', backgroundColor: 'rgba(123,47,255,0.12)', color: 'var(--color-primary-light)', fontSize: '12px', fontWeight: 500 }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '4px', backgroundColor: 'rgba(139,92,246,0.12)', color: 'var(--color-primary-light)', fontSize: '12px', fontWeight: 500 }}>
                                 {appliedInterest}
                                 <button onClick={() => setAppliedInterest('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: 0 }}><X size={11} /></button>
                             </span>
@@ -395,7 +395,7 @@ export default function ExplorePage() {
                                     {profile.photos?.[0] ? (
                                         <img src={profile.photos[0]} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
-                                        <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'rgba(123,47,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 700, color: 'var(--color-primary-light)' }}>
+                                        <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 700, color: 'var(--color-primary-light)' }}>
                                             {initials}
                                         </div>
                                     )}
@@ -408,7 +408,7 @@ export default function ExplorePage() {
                                     <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>{profile.department} · Year {profile.year}</p>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                         {profile.interests?.slice(0, 3).map(interest => (
-                                            <span key={interest} style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(123,47,255,0.1)', color: 'var(--color-primary-light)', fontSize: '11px', fontWeight: 500 }}>{interest}</span>
+                                            <span key={interest} style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(139,92,246,0.1)', color: 'var(--color-primary-light)', fontSize: '11px', fontWeight: 500 }}>{interest}</span>
                                         ))}
                                     </div>
                                 </div>

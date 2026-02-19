@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, Users, Heart, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, Users, Heart, ChevronLeft, ChevronRight, X, MessageCircle, Lock } from 'lucide-react';
 import api from '../services/api';
 
 interface UserProfile {
@@ -26,6 +26,22 @@ export default function UserProfilePage() {
     const [error, setError] = useState('');
     const [activePhoto, setActivePhoto] = useState(0);
     const [actionLoading, setActionLoading] = useState(false);
+    const [messageError, setMessageError] = useState('');
+
+    const handleMessage = async () => {
+        try {
+            await api.post('/chats', { participantId: user!._id });
+            navigate('/chat');
+        } catch (err: any) {
+            const code = err?.response?.data?.error;
+            if (code === 'not_connected') {
+                setMessageError(`You're not connected with ${user!.name} yet — like each other first to unlock messaging.`);
+                setTimeout(() => setMessageError(''), 4000);
+            } else {
+                navigate('/chat');
+            }
+        }
+    };
 
     const handleUndo = async () => {
         if (!user || actionLoading) return;
@@ -108,6 +124,25 @@ export default function UserProfilePage() {
 
     return (
         <div style={{ maxWidth: '560px', margin: '0 auto', padding: '0' }}>
+
+            {/* Not-connected toast */}
+            {messageError && (
+                <div style={{
+                    position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+                    zIndex: 200, display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '12px 20px', borderRadius: '10px',
+                    backgroundColor: 'var(--color-surface2)',
+                    border: '1px solid var(--color-border)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                    maxWidth: '340px', width: 'calc(100vw - 48px)',
+                    animation: 'fadeIn 0.2s ease',
+                }}>
+                    <Lock size={16} color="var(--color-text-muted)" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: '1.5' }}>
+                        {messageError}
+                    </span>
+                </div>
+            )}
 
             {/* Back button */}
             <div style={{ padding: '20px 24px 12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -195,7 +230,7 @@ export default function UserProfilePage() {
                     }}>
                         <div style={{
                             width: '100px', height: '100px', borderRadius: '50%',
-                            backgroundColor: 'rgba(123,47,255,0.15)',
+                            backgroundColor: 'rgba(139,92,246,0.15)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '38px', fontWeight: 800, color: 'var(--color-primary-light)',
                         }}>
@@ -251,7 +286,7 @@ export default function UserProfilePage() {
                                     <span key={interest}
                                         style={{
                                             padding: '5px 14px', borderRadius: '4px',
-                                            backgroundColor: 'rgba(123,47,255,0.1)',
+                                            backgroundColor: 'rgba(139,92,246,0.1)',
                                             color: 'var(--color-primary-light)',
                                             fontSize: '12px', fontWeight: 500,
                                         }}>
@@ -294,7 +329,7 @@ export default function UserProfilePage() {
                 {!user.hasSwiped && (
                     <div style={{
                         position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
-                        display: 'flex', gap: '24px', zIndex: 100,
+                        display: 'flex', gap: '16px', zIndex: 100, alignItems: 'center',
                     }}>
                         <button onClick={() => handleSwipe('pass')} disabled={actionLoading}
                             style={{
@@ -311,13 +346,30 @@ export default function UserProfilePage() {
                             <X size={28} />
                         </button>
 
+                        <button onClick={handleMessage}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '14px 22px', borderRadius: '30px',
+                                backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                                cursor: 'pointer', color: 'var(--color-text)',
+                                fontWeight: 600, fontSize: '14px',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                transition: 'transform 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                            <MessageCircle size={20} color="var(--color-primary-light)" />
+                            Message
+                        </button>
+
                         <button onClick={() => handleSwipe('like')} disabled={actionLoading}
                             style={{
                                 width: '56px', height: '56px', borderRadius: '50%',
                                 backgroundColor: 'var(--color-primary)', border: 'none',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 cursor: actionLoading ? 'not-allowed' : 'pointer',
-                                color: '#fff', boxShadow: '0 4px 12px rgba(123, 47, 255, 0.4)',
+                                color: '#fff', boxShadow: '0 4px 12px rgba(139,92,246,0.4)',
                                 transition: 'transform 0.2s',
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
@@ -334,31 +386,51 @@ export default function UserProfilePage() {
                         position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', zIndex: 100,
                     }}>
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            padding: '10px 24px', borderRadius: '30px',
-                            backgroundColor: user.swipeType === 'like' ? 'var(--color-primary)' : 'var(--color-surface)',
-                            border: user.swipeType === 'pass' ? '1px solid var(--color-danger)' : 'none',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                        }}>
-                            {user.swipeType === 'like' ? <Heart size={18} fill="#fff" color="#fff" /> : <X size={18} color="var(--color-danger)" />}
-                            <span style={{
-                                fontWeight: 700, fontSize: '14px', letterSpacing: '1px',
-                                color: user.swipeType === 'like' ? '#fff' : 'var(--color-danger)'
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {user.swipeType === 'like' && (
+                                <button onClick={handleMessage}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        padding: '12px 24px', borderRadius: '30px',
+                                        backgroundColor: 'var(--color-primary)', border: 'none',
+                                        cursor: 'pointer', color: '#fff',
+                                        fontWeight: 700, fontSize: '14px',
+                                        boxShadow: '0 4px 16px rgba(139,92,246,0.4)',
+                                        transition: 'transform 0.2s',
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                >
+                                    <MessageCircle size={18} />
+                                    Message
+                                </button>
+                            )}
+
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '10px 20px', borderRadius: '30px',
+                                backgroundColor: user.swipeType === 'like' ? 'rgba(139,92,246,0.15)' : 'var(--color-surface)',
+                                border: user.swipeType === 'pass' ? '1px solid var(--color-danger)' : '1px solid rgba(139,92,246,0.3)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                             }}>
-                                {user.swipeType === 'like' ? 'LIKED' : 'PASSED'}
-                            </span>
+                                {user.swipeType === 'like' ? <Heart size={16} fill="var(--color-primary-light)" color="var(--color-primary-light)" /> : <X size={16} color="var(--color-danger)" />}
+                                <span style={{
+                                    fontWeight: 700, fontSize: '13px', letterSpacing: '1px',
+                                    color: user.swipeType === 'like' ? 'var(--color-primary-light)' : 'var(--color-danger)'
+                                }}>
+                                    {user.swipeType === 'like' ? 'LIKED' : 'PASSED'}
+                                </span>
+                            </div>
                         </div>
 
                         <button onClick={handleUndo} disabled={actionLoading}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                background: 'white', border: 'none', cursor: 'pointer',
-                                padding: '8px 16px', borderRadius: '20px',
+                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                padding: '6px 14px', borderRadius: '20px',
                                 fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                             }}>
-                            <ArrowLeft size={14} /> Undo Action
+                            <ArrowLeft size={13} /> Undo
                         </button>
                     </div>
                 )}

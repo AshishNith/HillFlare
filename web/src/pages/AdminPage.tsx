@@ -111,19 +111,19 @@ export default function AdminPage() {
     return (
         <div className="p-6 lg:p-10 max-w-5xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <h1 className="text-3xl font-bold mb-6"><span className="text-gradient">Admin Panel</span></h1>
+                <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-6">
                     <button
                         onClick={() => setTab('users')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${tab === 'users' ? 'bg-primary text-white' : 'glass text-text-muted hover:text-text'}`}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${tab === 'users' ? 'bg-primary text-white' : 'bg-surface-3 border border-border text-text-muted hover:text-text'}`}
                     >
                         <Users size={16} /> Users
                     </button>
                     <button
                         onClick={() => setTab('reports')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${tab === 'reports' ? 'bg-primary text-white' : 'glass text-text-muted hover:text-text'}`}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${tab === 'reports' ? 'bg-primary text-white' : 'bg-surface-3 border border-border text-text-muted hover:text-text'}`}
                     >
                         <Flag size={16} /> Reports
                     </button>
@@ -134,7 +134,7 @@ export default function AdminPage() {
                         <Loader2 size={32} className="animate-spin text-primary" />
                     </div>
                 ) : tab === 'users' ? (
-                    <div className="glass rounded-2xl overflow-hidden">
+                    <div className="card rounded-2xl overflow-hidden">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border">
@@ -193,10 +193,10 @@ export default function AdminPage() {
                 ) : (
                     <div className="space-y-3">
                         {reports.length === 0 && (
-                            <div className="glass rounded-2xl p-8 text-center text-text-muted">No reports found</div>
+                            <div className="card p-8 text-center text-text-muted">No reports found</div>
                         )}
                         {reports.map(r => (
-                            <div key={r._id} className="glass rounded-xl p-5 flex items-start justify-between gap-4">
+                            <div key={r._id} className="card p-5 flex items-start justify-between gap-4">
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium mb-1">
                                         <span className="text-primary-light">{r.reporter?.name}</span>

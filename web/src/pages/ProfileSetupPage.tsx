@@ -109,7 +109,7 @@ export default function ProfileSetupPage() {
                         <button key={y} onClick={() => setForm({ ...form, year: y })}
                             style={{
                                 width: '42px', height: '42px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                                backgroundColor: form.year === y ? 'rgba(123,47,255,0.18)' : 'var(--color-surface-3)',
+                                backgroundColor: form.year === y ? 'rgba(139,92,246,0.18)' : 'var(--color-surface-3)',
                                 color: form.year === y ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
                                 fontWeight: 700, fontSize: '14px', transition: 'all 0.12s',
                             }}>{y}</button>
@@ -131,7 +131,7 @@ export default function ProfileSetupPage() {
                         style={{
                             padding: '7px 16px', borderRadius: '4px', border: 'none', cursor: 'pointer',
                             fontSize: '13px', fontWeight: 500, transition: 'all 0.12s',
-                            backgroundColor: form.interests.includes(interest) ? 'rgba(123,47,255,0.18)' : 'var(--color-surface-3)',
+                            backgroundColor: form.interests.includes(interest) ? 'rgba(139,92,246,0.18)' : 'var(--color-surface-3)',
                             color: form.interests.includes(interest) ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
                         }}>
                         {interest}
@@ -150,7 +150,7 @@ export default function ProfileSetupPage() {
                         style={{
                             padding: '7px 16px', borderRadius: '4px', border: 'none', cursor: 'pointer',
                             fontSize: '13px', fontWeight: 500, transition: 'all 0.12s',
-                            backgroundColor: form.clubs.includes(club) ? 'rgba(123,47,255,0.18)' : 'var(--color-surface-3)',
+                            backgroundColor: form.clubs.includes(club) ? 'rgba(139,92,246,0.18)' : 'var(--color-surface-3)',
                             color: form.clubs.includes(club) ? 'var(--color-primary-light)' : 'var(--color-text-muted)',
                         }}>
                         {club}

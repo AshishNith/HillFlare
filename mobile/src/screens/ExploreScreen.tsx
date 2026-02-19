@@ -373,7 +373,7 @@ const s = StyleSheet.create({
     },
     tag: {
         flexDirection: 'row', alignItems: 'center', gap: 4,
-        backgroundColor: 'rgba(123,47,255,0.12)',
+        backgroundColor: 'rgba(139,92,246,0.12)',
         paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4,
     },
     tagText: { fontSize: 12, fontWeight: '600', color: theme.colors.primaryLight },
@@ -422,7 +422,7 @@ const s = StyleSheet.create({
         paddingHorizontal: 14, paddingVertical: 7,
         borderRadius: 4, backgroundColor: theme.colors.surface3,
     },
-    chipActive: { backgroundColor: 'rgba(123,47,255,0.18)' },
+    chipActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
     chipText: { fontSize: 13, fontWeight: '500', color: theme.colors.textMuted },
     chipTextActive: { color: theme.colors.primaryLight, fontWeight: '600' },
 

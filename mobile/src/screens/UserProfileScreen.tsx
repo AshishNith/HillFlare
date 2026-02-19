@@ -84,6 +84,25 @@ export default function UserProfileScreen({ route, navigation }: any) {
         ]);
     };
 
+    const handleMessage = async () => {
+        if (!user) return;
+        try {
+            await api.post('/chats', { participantId: user._id });
+            navigation.navigate('Main', { screen: 'Chat' });
+        } catch (err: any) {
+            const code = err?.response?.data?.error;
+            if (code === 'not_connected') {
+                Alert.alert(
+                    'Not Connected',
+                    `You and ${user.name} haven't matched yet. Like each other first to unlock messaging.`,
+                    [{ text: 'Got it' }]
+                );
+            } else {
+                navigation.navigate('Main', { screen: 'Chat' });
+            }
+        }
+    };
+
     const handleSwipe = async (type: 'like' | 'pass') => {
         if (!user || actionLoading) return;
         setActionLoading(true);
@@ -121,7 +140,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
     if (error || !user) {
         return (
             <View style={s.center}>
-                <Text style={{ fontSize: 48, marginBottom: 12 }}>😕</Text>
+                <Ionicons name="person-outline" size={48} color={theme.colors.textSubtle} style={{ marginBottom: 12 }} />
                 <Text style={s.errorTitle}>Profile not found</Text>
                 <Text style={s.errorSub}>This user may not exist or has been removed.</Text>
                 <TouchableOpacity style={s.backBtnAlt} onPress={() => navigation.goBack()} activeOpacity={0.8}>
@@ -252,6 +271,10 @@ export default function UserProfileScreen({ route, navigation }: any) {
                     <TouchableOpacity style={[s.actionBtn, s.passBtn]} onPress={() => handleSwipe('pass')} disabled={actionLoading}>
                         <Ionicons name="close" size={32} color="#EF4444" />
                     </TouchableOpacity>
+                    <TouchableOpacity style={s.msgBtn} onPress={handleMessage}>
+                        <Ionicons name="chatbubble-ellipses" size={22} color={theme.colors.primaryLight} />
+                        <Text style={s.msgBtnText}>Message</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity style={[s.actionBtn, s.likeBtn]} onPress={() => handleSwipe('like')} disabled={actionLoading}>
                         <Ionicons name="heart" size={32} color="#fff" />
                     </TouchableOpacity>
@@ -261,6 +284,12 @@ export default function UserProfileScreen({ route, navigation }: any) {
             {/* Already Swiped State */}
             {user && user.hasSwiped && (
                 <View style={s.resultContainer}>
+                    {user.swipeType === 'like' && (
+                        <TouchableOpacity style={s.messageCta} onPress={handleMessage}>
+                            <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                            <Text style={s.messageCtaText}>Send a Message</Text>
+                        </TouchableOpacity>
+                    )}
                     <View style={[s.resultBadge, user.swipeType === 'like' ? s.resultLike : s.resultPass]}>
                         <Ionicons
                             name={user.swipeType === 'like' ? "heart" : "close"}
@@ -314,7 +343,7 @@ const s = StyleSheet.create({
     },
     avatarCircle: {
         width: 100, height: 100, borderRadius: 50,
-        backgroundColor: 'rgba(123,47,255,0.15)',
+        backgroundColor: 'rgba(139,92,246,0.15)',
         justifyContent: 'center', alignItems: 'center',
     },
     avatarInitials: { fontSize: 36, fontWeight: '800', color: theme.colors.primaryLight },
@@ -335,7 +364,7 @@ const s = StyleSheet.create({
     bioText: { fontSize: 14, color: theme.colors.textMuted, lineHeight: 22 },
 
     chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-    chip: { paddingHorizontal: 14, paddingVertical: 5, borderRadius: 4, backgroundColor: 'rgba(123,47,255,0.1)' },
+    chip: { paddingHorizontal: 14, paddingVertical: 5, borderRadius: 4, backgroundColor: 'rgba(139,92,246,0.1)' },
     chipText: { fontSize: 12, fontWeight: '500', color: theme.colors.primaryLight },
     clubChip: { paddingHorizontal: 14, paddingVertical: 5, borderRadius: 4, backgroundColor: 'rgba(52,211,153,0.1)' },
     clubChipText: { fontSize: 12, fontWeight: '500', color: theme.colors.success },
@@ -385,4 +414,21 @@ const s = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.05)',
     },
     undoText: { fontSize: 13, fontWeight: '600', color: theme.colors.textMuted },
+
+    msgBtn: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        paddingHorizontal: 18, paddingVertical: 12, borderRadius: 30,
+        backgroundColor: theme.colors.surface,
+        borderWidth: 1, borderColor: theme.colors.border,
+    },
+    msgBtnText: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
+
+    messageCta: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        paddingHorizontal: 28, paddingVertical: 14, borderRadius: 30,
+        backgroundColor: theme.colors.primary,
+        shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4, shadowRadius: 8, elevation: 8,
+    },
+    messageCtaText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

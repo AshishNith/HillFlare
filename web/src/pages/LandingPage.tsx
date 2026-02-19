@@ -67,31 +67,15 @@ export default function LandingPage() {
         <div className="min-h-screen bg-surface overflow-hidden">
             {/* ========== HERO ========== */}
             <section className="relative min-h-screen flex items-center justify-center px-4">
-                {/* Animated glow blobs */}
+                {/* Subtle background pattern */}
                 <div className="absolute inset-0 overflow-hidden">
-                    <motion.div
-                        className="absolute w-[600px] h-[600px] rounded-full opacity-20"
-                        style={{ background: 'radial-gradient(circle, #8B5CF6 0%, transparent 70%)', top: '-10%', left: '-10%' }}
-                        animate={{ x: [0, 80, 0], y: [0, 60, 0], scale: [1, 1.2, 1] }}
-                        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <motion.div
-                        className="absolute w-[500px] h-[500px] rounded-full opacity-15"
-                        style={{ background: 'radial-gradient(circle, #EC4899 0%, transparent 70%)', bottom: '-5%', right: '-5%' }}
-                        animate={{ x: [0, -60, 0], y: [0, -80, 0], scale: [1, 1.3, 1] }}
-                        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <motion.div
-                        className="absolute w-[400px] h-[400px] rounded-full opacity-10"
-                        style={{ background: 'radial-gradient(circle, #F59E0B 0%, transparent 70%)', top: '40%', left: '50%' }}
-                        animate={{ x: [0, 40, -40, 0], y: [0, -40, 40, 0] }}
-                        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-                    />
+                    <div className="absolute w-96 h-96 rounded-full opacity-[0.07]" style={{ background: '#8B5CF6', filter: 'blur(120px)', top: '10%', left: '15%' }} />
+                    <div className="absolute w-80 h-80 rounded-full opacity-[0.05]" style={{ background: '#F97316', filter: 'blur(100px)', bottom: '20%', right: '10%' }} />
                 </div>
 
                 <div className="relative z-10 text-center max-w-4xl mx-auto">
                     <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
-                        <span className="inline-block px-4 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary-light border border-primary/20 mb-6">
+                        <span className="inline-block px-4 py-1.5 rounded-full text-sm font-medium bg-surface-3 text-text-muted border border-border mb-6">
                             🎓 Exclusively for College Students
                         </span>
                     </motion.div>
@@ -102,7 +86,8 @@ export default function LandingPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.2 }}
                     >
-                        Your Campus.{' '}
+                        Your Campus.
+                        <br />
                         <span className="text-gradient">Your Connections.</span>
                     </motion.h1>
 
@@ -122,10 +107,10 @@ export default function LandingPage() {
                         transition={{ duration: 0.8, delay: 0.6 }}
                     >
                         <a href="/login" className="btn-primary text-lg px-8 py-4">
-                            ✨ Join on Web
+                            Get Started
                         </a>
                         <button className="btn-secondary text-lg px-8 py-4">
-                            📱 Download APK
+                            Download APK
                         </button>
                     </motion.div>
                 </div>
@@ -154,7 +139,7 @@ export default function LandingPage() {
                         custom={0}
                     >
                         <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                            Three Ways to <span className="text-gradient">Connect</span>
+                            Three Ways to <span className="text-primary-light">Connect</span>
                         </h2>
                         <p className="text-text-muted text-lg max-w-2xl mx-auto">
                             Whether you're looking for a spark, shared interests, or a secret admirer — we've got you.
@@ -165,7 +150,7 @@ export default function LandingPage() {
                         {features.map((f, i) => (
                             <motion.div
                                 key={f.title}
-                                className="glass rounded-2xl p-8 hover:scale-105 transition-transform duration-300 group cursor-pointer"
+                                className="card p-8 hover:border-border-strong transition-all duration-300 group cursor-pointer"
                                 initial="hidden"
                                 whileInView="visible"
                                 viewport={{ once: true, margin: '-50px' }}
@@ -196,7 +181,7 @@ export default function LandingPage() {
                         custom={0}
                     >
                         <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                            Your Safety, <span className="text-gradient">Our Priority</span>
+                            Your Safety, <span className="text-primary-light">Our Priority</span>
                         </h2>
                         <p className="text-text-muted text-lg">Built with privacy and security at the core.</p>
                     </motion.div>
@@ -205,7 +190,7 @@ export default function LandingPage() {
                         {safetyItems.map((item, i) => (
                             <motion.div
                                 key={item.title}
-                                className="glass rounded-2xl p-8 text-center"
+                                className="card p-8 text-center"
                                 initial="hidden"
                                 whileInView="visible"
                                 viewport={{ once: true }}
@@ -233,7 +218,7 @@ export default function LandingPage() {
                         custom={0}
                     >
                         <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                            Explore the <span className="text-gradient">Experience</span>
+                            Explore the <span className="text-primary-light">Experience</span>
                         </h2>
                     </motion.div>
 
@@ -249,7 +234,7 @@ export default function LandingPage() {
                                 custom={i + 1}
                             >
                                 {/* Phone mockup */}
-                                <div className="glass rounded-3xl p-3 mx-auto max-w-[200px] group-hover:glow transition-all duration-500">
+                                <div className="card p-3 mx-auto max-w-[200px] group-hover:border-border-strong transition-all duration-500">
                                     <div className="rounded-2xl overflow-hidden aspect-[9/16] relative" style={{ background: `linear-gradient(180deg, ${screen.color}22 0%, ${screen.color}08 100%)` }}>
                                         {/* Notch */}
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-surface rounded-b-xl" />
@@ -278,7 +263,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent" />
                 <div className="max-w-xl mx-auto relative">
                     <motion.div
-                        className="glass-strong rounded-3xl p-8 md:p-12 glow"
+                        className="card-raised p-8 md:p-12"
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true }}
@@ -286,7 +271,7 @@ export default function LandingPage() {
                         custom={0}
                     >
                         <h2 className="text-3xl md:text-4xl font-bold text-center mb-3">
-                            Join the <span className="text-gradient">Waitlist</span>
+                            Join the <span className="text-accent-light">Waitlist</span>
                         </h2>
                         <p className="text-text-muted text-center mb-8">
                             Be the first to know when we launch at your campus.
@@ -337,7 +322,7 @@ export default function LandingPage() {
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-2">
                         <span className="text-2xl">💜</span>
-                        <span className="text-xl font-bold text-gradient">CampusConnect</span>
+                        <span className="text-xl font-bold text-primary-light">CampusConnect</span>
                     </div>
                     <div className="flex gap-6 text-text-muted text-sm">
                         <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>

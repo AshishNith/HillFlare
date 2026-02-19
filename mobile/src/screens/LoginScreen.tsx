@@ -78,7 +78,7 @@ const s = StyleSheet.create({
     },
     logoIcon: {
         width: 56, height: 56,
-        backgroundColor: 'rgba(123,47,255,0.12)',
+        backgroundColor: 'rgba(139,92,246,0.12)',
         borderRadius: 14,
         justifyContent: 'center', alignItems: 'center',
         marginBottom: 20,
@@ -99,6 +99,8 @@ const s = StyleSheet.create({
         fontSize: 15,
         padding: 14,
         borderRadius: 8,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
         marginBottom: 16,
     },
     error: { color: theme.colors.danger, fontSize: 13, marginBottom: 12 },

@@ -62,11 +62,11 @@ export default function NotificationsScreen() {
 
     const getColor = (type: string) => {
         switch (type) {
-            case 'match': return '#EC4899'; // pink
-            case 'crush_reveal': return '#A855F7'; // purple
-            case 'message': return '#3B82F6'; // blue
-            case 'report_update': return '#EAB308'; // yellow
-            default: return '#6B7280'; // gray
+            case 'match': return theme.colors.primaryLight;
+            case 'crush_reveal': return theme.colors.accent;
+            case 'message': return theme.colors.success;
+            case 'report_update': return theme.colors.warning;
+            default: return theme.colors.textMuted;
         }
     };
 
@@ -98,8 +98,11 @@ export default function NotificationsScreen() {
                 }
                 break;
             case 'match':
-                // For match, referenceId is matchId. Chat screen might need to find it.
-                navigation.navigate('Main', { screen: 'Chat' });
+                if (n.referenceId) {
+                    navigation.navigate('UserProfile', { userId: n.referenceId });
+                } else {
+                    navigation.navigate('Main', { screen: 'Chat' });
+                }
                 break;
             case 'crush_reveal':
                 navigation.navigate('Main', { screen: 'Crush' });
@@ -178,8 +181,8 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: theme.colors.border,
     },
     unreadCard: {
-        backgroundColor: 'rgba(123,47,255,0.03)',
-        borderColor: 'rgba(123,47,255,0.2)',
+        backgroundColor: 'rgba(139,92,246,0.05)',
+        borderColor: 'rgba(139,92,246,0.2)',
     },
     iconCircle: {
         width: 40, height: 40, borderRadius: 20,

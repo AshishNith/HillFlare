@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Modal, ScrollView, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -51,9 +51,9 @@ export default function CrushScreen() {
         try {
             const { data } = await api.post('/crushes', { crushUserId: userId });
             if (data.data?.isMutual) {
-                Alert.alert('💘 Crush Revealed!', `${name} picked you too! It's a match!`);
+                Alert.alert('Crush Revealed!', `${name} picked you too! It's a match!`);
             } else {
-                Alert.alert('🤫 Crush Added', `${name} has been added as your secret crush.`);
+                Alert.alert('Crush Added', `${name} has been added as your secret crush.`);
             }
             setBrowseUsers((prev) => prev.filter((u) => u._id !== userId));
             fetchData();
@@ -98,7 +98,7 @@ export default function CrushScreen() {
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Header */}
-            <Text style={styles.title}>Secret Crush 🤫</Text>
+            <Text style={styles.title}>Secret Crush</Text>
             <Text style={styles.subtitle}>Pick up to 3 anonymous crushes per month. Mutual picks reveal both identities!</Text>
 
             {/* Crush Slots */}
@@ -119,9 +119,8 @@ export default function CrushScreen() {
                         return (
                             <View key={slot} style={[styles.slotContainer]}>
                                 {crush ? (
-                                    <LinearGradient
-                                        colors={['rgba(236,72,153,0.1)', 'rgba(139,92,246,0.05)']}
-                                        style={styles.slotGradient}
+                                    <View
+                                        style={styles.slotFilled}
                                     >
                                         <TouchableOpacity
                                             style={styles.slotContent}
@@ -139,10 +138,10 @@ export default function CrushScreen() {
                                             <Text style={styles.slotDept} numberOfLines={1}>{crush.crushUserId?.department}</Text>
                                             <Text style={styles.removeTip}>Hold to remove</Text>
                                         </TouchableOpacity>
-                                    </LinearGradient>
+                                    </View>
                                 ) : (
                                     <View style={[styles.slot, styles.slotEmpty]}>
-                                        <Text style={styles.slotEmptyIcon}>💜</Text>
+                                        <Ionicons name="add" size={24} color={theme.colors.textSubtle} style={{ marginBottom: 4 }} />
                                         <Text style={styles.slotEmptyLabel}>Empty</Text>
                                     </View>
                                 )}
@@ -155,18 +154,14 @@ export default function CrushScreen() {
             {/* Revealed Crushes */}
             {revealed.length > 0 && (
                 <View style={styles.sectionCard}>
-                    <Text style={styles.revealTitle}>💘 Mutual Reveals</Text>
+                    <Text style={styles.revealTitle}>Mutual Reveals</Text>
                     {revealed.map((u: any) => (
-                        <LinearGradient
+                        <View
                             key={u._id}
-                            colors={['rgba(236,72,153,0.1)', 'rgba(139,92,246,0.05)']}
-                            style={styles.revealGradient}
+                            style={styles.revealCard}
                         >
                             <TouchableOpacity style={styles.revealItem} onPress={() => navigation.navigate('UserProfile', { userId: u._id })}>
-                                <LinearGradient
-                                    colors={['#EC4899', '#8B5CF6']}
-                                    style={styles.avatarBorder}
-                                >
+                                <View style={styles.avatarBorder}>
                                     {u.photos?.[0] || u.avatar ? (
                                         <Image source={{ uri: u.photos?.[0] || u.avatar }} style={styles.revealImage} />
                                     ) : (
@@ -174,13 +169,13 @@ export default function CrushScreen() {
                                             <Text style={styles.revealInitial}>{u.name?.[0]}</Text>
                                         </View>
                                     )}
-                                </LinearGradient>
+                                </View>
                                 <View style={{ flex: 1, marginLeft: 12 }}>
                                     <Text style={styles.revealName}>{u.name}</Text>
                                     <Text style={styles.revealDept}>{u.department} • Year {u.year}</Text>
                                 </View>
                             </TouchableOpacity>
-                        </LinearGradient>
+                        </View>
                     ))}
                 </View>
             )}
@@ -192,7 +187,7 @@ export default function CrushScreen() {
 
                     {!browsing ? (
                         <TouchableOpacity style={styles.browseBtn} onPress={loadBrowseProfiles}>
-                            <Text style={styles.browseBtnText}>🔍 Browse Profiles</Text>
+                            <Text style={styles.browseBtnText}>Browse Profiles</Text>
                         </TouchableOpacity>
                     ) : browseLoading ? (
                         <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginVertical: 20 }} />
@@ -225,7 +220,7 @@ export default function CrushScreen() {
                                             style={styles.pickBtn}
                                             onPress={() => addCrush(u._id, u.name)}
                                         >
-                                            <Text style={styles.pickBtnText}>🤫 Pick</Text>
+                                            <Text style={styles.pickBtnText}>Pick</Text>
                                         </TouchableOpacity>
                                     </View>
                                 ))
@@ -269,20 +264,21 @@ const styles = StyleSheet.create({
     slot: {
         flex: 1,
         borderRadius: 16,
-        borderWidth: 2,
+        borderWidth: 1,
         borderStyle: 'dashed',
-        borderColor: 'rgba(139,92,246,0.15)',
+        borderColor: theme.colors.borderStrong,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(28,21,51,0.3)',
+        backgroundColor: theme.colors.surface2,
     },
-    slotGradient: {
+    slotFilled: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(236,72,153,0.15)',
+        borderColor: theme.colors.borderStrong,
         borderRadius: 16,
+        backgroundColor: theme.colors.surface3,
     },
     slotEmpty: {
         justifyContent: 'center',
@@ -301,23 +297,23 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: 'rgba(236,72,153,0.15)',
+        backgroundColor: 'rgba(139,92,246,0.12)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,
     },
-    slotInitial: { fontSize: 20, fontWeight: 'bold', color: '#F472B6' },
+    slotInitial: { fontSize: 20, fontWeight: 'bold', color: theme.colors.primaryLight },
     slotName: { fontSize: 12, fontWeight: '600', color: theme.colors.text, textAlign: 'center' },
     slotDept: { fontSize: 10, color: theme.colors.textMuted, textAlign: 'center', marginTop: 2 },
     removeTip: { fontSize: 9, color: theme.colors.textMuted, marginTop: 6, opacity: 0.5 },
-    slotEmptyIcon: { fontSize: 24, opacity: 0.3, marginBottom: 4 },
     slotEmptyLabel: { fontSize: 11, color: theme.colors.textMuted, opacity: 0.4 },
 
-    revealTitle: { fontSize: 16, fontWeight: 'bold', color: '#F472B6', marginBottom: 12 },
-    revealGradient: {
+    revealTitle: { fontSize: 16, fontWeight: 'bold', color: theme.colors.primaryLight, marginBottom: 12 },
+    revealCard: {
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: 'rgba(236,72,153,0.15)',
+        borderColor: theme.colors.borderStrong,
+        backgroundColor: theme.colors.surface3,
         marginBottom: 8,
         overflow: 'hidden',
     },
@@ -325,24 +321,26 @@ const styles = StyleSheet.create({
     avatarBorder: {
         padding: 2,
         borderRadius: 22,
+        borderWidth: 2,
+        borderColor: theme.colors.primary,
     },
     revealImage: {
         width: 40,
         height: 40,
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: '#130E22',
-        backgroundColor: '#130E22',
+        borderColor: '#09090B',
+        backgroundColor: '#09090B',
     },
     revealAvatarPlaceholder: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#1A1A1A',
+        backgroundColor: theme.colors.surface4,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    revealInitial: { fontSize: 16, fontWeight: 'bold', color: '#F472B6' },
+    revealInitial: { fontSize: 16, fontWeight: 'bold', color: theme.colors.primaryLight },
     revealName: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
     revealDept: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
 

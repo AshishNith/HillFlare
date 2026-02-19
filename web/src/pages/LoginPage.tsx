@@ -31,7 +31,7 @@ export default function LoginPage() {
                 style={{ background: 'radial-gradient(circle, #8B5CF6 0%, transparent 70%)' }} />
 
             <motion.div
-                className="glass-strong rounded-3xl p-8 md:p-12 w-full max-w-md relative z-10"
+                className="card-raised rounded-2xl p-8 md:p-12 w-full max-w-md relative z-10"
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5 }}

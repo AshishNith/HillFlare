@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { Chat } from '../models/Chat';
 import { Message } from '../models/Message';
+import { Match } from '../models/Match';
 import { messageLimiter } from '../middleware/rateLimiter';
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from '../config/env';
@@ -27,6 +28,43 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response): Promise<v
         res.json({ success: true, data: chats });
     } catch (error) {
         res.status(500).json({ success: false, error: 'Failed to fetch chats' });
+    }
+});
+
+// Create or get existing chat (requires a mutual match)
+router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const myId = req.user!._id;
+        const { participantId } = req.body;
+
+        if (!participantId) {
+            res.status(400).json({ success: false, error: 'participantId is required' });
+            return;
+        }
+
+        // Check mutual match exists
+        const match = await Match.findOne({
+            $or: [
+                { user1: myId, user2: participantId },
+                { user1: participantId, user2: myId },
+            ],
+        });
+
+        if (!match) {
+            res.status(403).json({ success: false, error: 'not_connected' });
+            return;
+        }
+
+        // Find or create chat
+        let chat = await Chat.findOne({ participants: { $all: [myId, participantId] } });
+        if (!chat) {
+            chat = await Chat.create({ participants: [myId, participantId] });
+        }
+
+        await chat.populate('participants', 'name avatar photos');
+        res.json({ success: true, data: chat });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to create chat' });
     }
 });
 

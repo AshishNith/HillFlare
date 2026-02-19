@@ -1,25 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* ── Flat Dark Palette ── */
-  --color-primary: #7B2FFF;
-  --color-primary-dark: #6020E0;
-  --color-primary-light: #9B5FFF;
-  --color-surface: #0A0A0A;
-  --color-surface-2: #111111;
-  --color-surface-3: #1A1A1A;
-  --color-surface-4: #222222;
-  --color-surface-5: #2A2A2A;
-  --color-text: #FFFFFF;
-  --color-text-muted: #777777;
-  --color-text-subtle: #444444;
-  --color-border: rgba(255, 255, 255, 0.05);
-  --color-border-strong: rgba(255, 255, 255, 0.1);
-  --color-success: #22C55E;
+  /* ── Warm Zinc Dark Palette ── */
+  --color-primary: #8B5CF6;
+  --color-primary-dark: #7C3AED;
+  --color-primary-light: #A78BFA;
+  --color-accent: #F97316;
+  --color-accent-light: #FB923C;
+  --color-surface: #09090B;
+  --color-surface-2: #131316;
+  --color-surface-3: #1C1C21;
+  --color-surface-4: #26262C;
+  --color-surface-5: #323239;
+  --color-text: #FAFAFA;
+  --color-text-muted: #A1A1AA;
+  --color-text-subtle: #52525B;
+  --color-border: #27272A;
+  --color-border-strong: #3F3F46;
+  --color-success: #10B981;
   --color-danger: #EF4444;
   --color-warning: #F59E0B;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
@@ -52,59 +54,66 @@
   }
 
   ::selection {
-    background: rgba(123, 47, 255, 0.3);
+    background: rgba(139, 92, 246, 0.3);
     color: #fff;
   }
 }
 
 /* ─── Keyframes ─── */
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-dot {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.4;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
-  to {
-    transform: rotate(360deg);
-  }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 @layer utilities {
 
-  /* ─── Flat sections (NO cards, NO borders, NO shadows) ─── */
+  /* ─── Card system ─── */
+  .card {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+  }
+
+  .card-raised {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .card-interactive {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .card-interactive:hover {
+    background: var(--color-surface-3);
+    border-color: var(--color-border-strong);
+  }
+
+  /* ─── Sections ─── */
   .section {
     background: var(--color-surface-2);
   }
@@ -121,7 +130,14 @@
 
   /* ─── Text ─── */
   .text-gradient {
-    background: linear-gradient(135deg, #9B5FFF 0%, #7B2FFF 100%);
+    background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-accent-gradient {
+    background: linear-gradient(135deg, #FB923C 0%, #F97316 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -147,13 +163,13 @@
 
   /* ─── Buttons ─── */
   .btn-primary {
-    background: var(--color-primary);
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
     color: white;
     padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 600;
     font-size: 0.9375rem;
-    transition: background 0.15s ease;
+    transition: all 0.2s ease;
     border: none;
     cursor: pointer;
     display: inline-flex;
@@ -161,24 +177,27 @@
     justify-content: center;
     gap: 0.5rem;
     letter-spacing: -0.01em;
+    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.25);
   }
 
   .btn-primary:hover {
-    background: var(--color-primary-dark);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    transform: translateY(-1px);
   }
 
   .btn-primary:active {
-    opacity: 0.9;
+    transform: translateY(0);
+    box-shadow: 0 1px 6px rgba(139, 92, 246, 0.2);
   }
 
   .btn-secondary {
     background: var(--color-surface-3);
     color: var(--color-text);
     padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 500;
-    transition: background 0.15s ease;
-    border: none;
+    transition: all 0.15s ease;
+    border: 1px solid var(--color-border);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -188,6 +207,7 @@
 
   .btn-secondary:hover {
     background: var(--color-surface-4);
+    border-color: var(--color-border-strong);
   }
 
   /* ─── Icon buttons ─── */
@@ -226,36 +246,38 @@
   .input-field {
     width: 100%;
     padding: 0.875rem 1rem;
-    border-radius: 8px;
+    border-radius: 10px;
     background: var(--color-surface-3);
-    border: none;
+    border: 1px solid var(--color-border);
     color: var(--color-text);
     font-size: 0.9375rem;
-    transition: background 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease;
     outline: none;
     font-family: var(--font-sans);
   }
 
   .input-field:focus {
+    border-color: var(--color-primary);
     background: var(--color-surface-4);
   }
 
   .input-field::placeholder {
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: 0.6;
   }
 
   /* ─── Search input ─── */
   .search-field {
     width: 100%;
     padding: 0.7rem 1rem 0.7rem 2.5rem;
-    border-radius: 8px;
+    border-radius: 10px;
     background: var(--color-surface-3);
-    border: none;
+    border: 1px solid var(--color-border);
     color: var(--color-text);
     font-size: 0.875rem;
     outline: none;
     font-family: var(--font-sans);
+    transition: border-color 0.15s ease;
   }
 
   .search-field::placeholder {
@@ -263,7 +285,7 @@
   }
 
   .search-field:focus {
-    background: var(--color-surface-4);
+    border-color: var(--color-primary);
   }
 
   /* ─── Chat bubbles ─── */
@@ -289,33 +311,38 @@
 
   /* ─── Tag chips ─── */
   .chip {
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.15s;
+    border: 1px solid transparent;
   }
 
   .chip-primary {
-    background: rgba(123, 47, 255, 0.12);
-    color: #9B5FFF;
+    background: rgba(139, 92, 246, 0.1);
+    color: #A78BFA;
+    border-color: rgba(139, 92, 246, 0.15);
   }
 
   .chip-primary:hover,
   .chip-primary.active {
-    background: rgba(123, 47, 255, 0.25);
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.3);
   }
 
   .chip-flat {
     background: var(--color-surface-3);
     color: var(--color-text-muted);
+    border-color: var(--color-border);
   }
 
   .chip-flat:hover,
   .chip-flat.active {
     background: var(--color-surface-4);
     color: var(--color-text);
+    border-color: var(--color-border-strong);
   }
 
   /* ─── List rows (flat, no card) ─── */
