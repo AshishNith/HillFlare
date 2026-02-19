@@ -73,7 +73,7 @@ export default function SwipeScreen() {
                         </View>
                     )}
                     <TouchableOpacity style={s.iconBtn} onPress={() => navigation.navigate('Notifications')}>
-                        <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+                        <Ionicons name="notifications-outline" size={24} color={theme.colors.text.primary} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -186,7 +186,7 @@ export default function SwipeScreen() {
                     <Text style={s.emptyTitle}>You're all caught up</Text>
                     <Text style={s.emptySub}>Check back later for new profiles</Text>
                     <TouchableOpacity
-                        style={{ marginTop: 24, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: theme.colors.surface3, borderRadius: 20 }}
+                        style={{ marginTop: 24, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: theme.colors.background.tertiary, borderRadius: 20 }}
                         onPress={() => { setLoading(true); api.get('/swipes/feed').then(({ data }) => { setProfiles(data.data || []); setLoading(false); }).catch(() => setLoading(false)); }}
                     >
                         <Text style={{ fontWeight: '600', color: theme.colors.primary }}>Refresh</Text>
@@ -198,13 +198,13 @@ export default function SwipeScreen() {
             {!allSwiped && profiles.length > 0 && (
                 <View style={s.actions}>
                     <TouchableOpacity style={s.passBtn} onPress={() => swiperRef.current?.swipeLeft()} activeOpacity={0.8}>
-                        <Ionicons name="close" size={24} color={theme.colors.textMuted} />
+                        <Ionicons name="close" size={24} color={theme.colors.text.muted} />
                     </TouchableOpacity>
                     <TouchableOpacity style={s.likeBtn} onPress={() => swiperRef.current?.swipeRight()} activeOpacity={0.8}>
                         <Ionicons name="heart" size={30} color="#fff" />
                     </TouchableOpacity>
                     <TouchableOpacity style={s.msgBtn} onPress={() => { const p = profiles[currentIndex]; if (p) navigation.navigate('UserProfile', { userId: p._id }); }} activeOpacity={0.8}>
-                        <Ionicons name="chatbubble" size={22} color={theme.colors.textMuted} />
+                        <Ionicons name="chatbubble" size={22} color={theme.colors.text.muted} />
                     </TouchableOpacity>
                 </View>
             )}
@@ -213,32 +213,32 @@ export default function SwipeScreen() {
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
 
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         paddingHorizontal: 20, paddingTop: Platform.OS === 'ios' ? 60 : 50, paddingBottom: 10,
-        backgroundColor: theme.colors.surface,
+        backgroundColor: theme.colors.background.primary,
         zIndex: 10,
     },
     logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    headerTitle: { fontSize: 22, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.5 },
+    headerTitle: { fontSize: 22, fontWeight: '800', color: theme.colors.text.primary, letterSpacing: -0.5 },
     iconBtn: { padding: 4 },
     headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     counter: {
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
         paddingHorizontal: 12, paddingVertical: 5,
-        borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border,
+        borderRadius: 20, borderWidth: 1, borderColor: theme.colors.glass.border,
     },
-    counterText: { fontSize: 12, color: theme.colors.textMuted, fontWeight: '500' },
+    counterText: { fontSize: 12, color: theme.colors.text.muted, fontWeight: '500' },
 
     cardWrap: { flex: 1, paddingHorizontal: 16, marginBottom: 100 },
     swiperContainer: { flex: 1 },
 
     card: {
         height: height * 0.72, borderRadius: 24, overflow: 'hidden',
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         ...theme.shadow.md,
     },
     photo: { ...StyleSheet.absoluteFillObject },
@@ -288,11 +288,11 @@ const s = StyleSheet.create({
     },
     passBtn: {
         width: 56, height: 56, borderRadius: 28,
-        backgroundColor: theme.colors.surface3,
-        borderWidth: 1, borderColor: theme.colors.borderStrong,
+        backgroundColor: theme.colors.background.tertiary,
+        borderWidth: 1, borderColor: theme.colors.glass.borderStrong,
         justifyContent: 'center', alignItems: 'center',
     },
-    passIcon: { fontSize: 20, color: theme.colors.textMuted },
+    passIcon: { fontSize: 20, color: theme.colors.text.muted },
     likeBtn: {
         width: 68, height: 68, borderRadius: 34,
         backgroundColor: theme.colors.primary,
@@ -302,8 +302,8 @@ const s = StyleSheet.create({
     likeIcon: { fontSize: 28, color: '#fff' },
     msgBtn: {
         width: 56, height: 56, borderRadius: 28,
-        backgroundColor: theme.colors.surface3,
-        borderWidth: 1, borderColor: theme.colors.borderStrong,
+        backgroundColor: theme.colors.background.tertiary,
+        borderWidth: 1, borderColor: theme.colors.glass.borderStrong,
         justifyContent: 'center', alignItems: 'center',
     },
     msgIcon: { fontSize: 20 },
@@ -314,13 +314,13 @@ const s = StyleSheet.create({
         justifyContent: 'center', alignItems: 'center',
     },
     matchCard: {
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         borderRadius: 28, padding: 40, alignItems: 'center',
         marginHorizontal: 32,
         borderWidth: 1, borderColor: 'rgba(139,92,246,0.3)',
     },
     matchTitle: { fontSize: 28, fontWeight: '800', color: '#fff', marginBottom: 8, letterSpacing: -0.5 },
-    matchSub: { fontSize: 15, color: theme.colors.textMuted, marginBottom: 28 },
+    matchSub: { fontSize: 15, color: theme.colors.text.muted, marginBottom: 28 },
     matchBtn: {
         backgroundColor: theme.colors.primary,
         paddingHorizontal: 32, paddingVertical: 14,
@@ -329,6 +329,6 @@ const s = StyleSheet.create({
     matchBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
 
     empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
-    emptyTitle: { fontSize: 22, fontWeight: '700', color: theme.colors.text, letterSpacing: -0.3, marginBottom: 8 },
-    emptySub: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center' },
+    emptyTitle: { fontSize: 22, fontWeight: '700', color: theme.colors.text.primary, letterSpacing: -0.3, marginBottom: 8 },
+    emptySub: { fontSize: 14, color: theme.colors.text.muted, textAlign: 'center' },
 });

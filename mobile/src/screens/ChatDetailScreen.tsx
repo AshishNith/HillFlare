@@ -145,7 +145,7 @@ export default function ChatDetailScreen() {
             {/* Header */}
             <View style={s.chatHeader}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={s.backTouch}>
-                    <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+                    <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <View style={s.chatHeaderCenter}>
                     <View style={s.chatAvatarWrap}>
@@ -209,17 +209,17 @@ export default function ChatDetailScreen() {
             {/* Input */}
             <View style={s.inputRow}>
                 <TouchableOpacity style={s.attachBtn} onPress={() => pickImage(false)}>
-                    <Ionicons name="image-outline" size={24} color={theme.colors.textMuted} />
+                    <Ionicons name="image-outline" size={24} color={theme.colors.text.muted} />
                 </TouchableOpacity>
                 <TouchableOpacity style={s.attachBtn} onPress={() => pickImage(true)}>
-                    <Ionicons name="camera-outline" size={24} color={theme.colors.textMuted} />
+                    <Ionicons name="camera-outline" size={24} color={theme.colors.text.muted} />
                 </TouchableOpacity>
                 <TextInput
                     style={s.msgInput}
                     value={text}
                     onChangeText={handleTextChange}
                     placeholder="Message..."
-                    placeholderTextColor={theme.colors.textMuted}
+                    placeholderTextColor={theme.colors.text.muted}
                     multiline
                 />
                 {uploading ? (
@@ -235,19 +235,19 @@ export default function ChatDetailScreen() {
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
     chatHeader: {
         flexDirection: 'row', alignItems: 'center',
         paddingHorizontal: 16, paddingTop: Platform.OS === 'ios' ? 60 : 50, paddingBottom: 14,
-        borderBottomWidth: 1, borderBottomColor: theme.colors.border,
-        gap: 12, backgroundColor: theme.colors.surface2
+        borderBottomWidth: 1, borderBottomColor: theme.colors.glass.border,
+        gap: 12, backgroundColor: theme.colors.background.secondary
     },
     backTouch: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
     chatHeaderCenter: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
     chatAvatarWrap: { position: 'relative' },
     chatHeaderAvatar: {
         width: 40, height: 40, borderRadius: 20,
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
         justifyContent: 'center', alignItems: 'center',
     },
     chatHeaderInitial: { fontSize: 16, fontWeight: '700', color: theme.colors.primaryLight },
@@ -255,11 +255,11 @@ const s = StyleSheet.create({
         position: 'absolute', bottom: 0, right: 0,
         width: 10, height: 10, borderRadius: 5,
         backgroundColor: theme.colors.success,
-        borderWidth: 2, borderColor: theme.colors.surface,
+        borderWidth: 2, borderColor: theme.colors.background.primary,
     },
-    chatHeaderName: { fontSize: 16, fontWeight: '700', color: theme.colors.text },
+    chatHeaderName: { fontSize: 16, fontWeight: '700', color: theme.colors.text.primary },
     typingText: { fontSize: 12, color: theme.colors.success, fontStyle: 'italic' },
-    onlineText: { fontSize: 12, color: theme.colors.textMuted },
+    onlineText: { fontSize: 12, color: theme.colors.text.muted },
 
     msgRow: { flexDirection: 'row' },
     msgRowMe: { justifyContent: 'flex-end' },
@@ -269,30 +269,30 @@ const s = StyleSheet.create({
         padding: 12, maxWidth: '75%',
     },
     recvBubble: {
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
         borderRadius: 20, borderBottomLeftRadius: 4,
         padding: 12, maxWidth: '75%',
     },
     imgBubble: { borderRadius: 16, overflow: 'hidden', maxWidth: '75%' },
-    msgText: { fontSize: 14, color: theme.colors.textMuted, lineHeight: 20 },
+    msgText: { fontSize: 14, color: theme.colors.text.muted, lineHeight: 20 },
     msgTextMe: { color: '#fff' },
     chatImage: { width: SCREEN_WIDTH * 0.55, height: SCREEN_WIDTH * 0.55 * 0.75 },
     msgMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 4 },
-    msgTime: { fontSize: 10, color: theme.colors.textMuted, opacity: 0.7 },
+    msgTime: { fontSize: 10, color: theme.colors.text.muted, opacity: 0.7 },
     msgTimeMe: { color: 'rgba(255,255,255,0.5)' },
 
     inputRow: {
         flexDirection: 'row', alignItems: 'flex-end',
         padding: 10, paddingBottom: Platform.OS === 'ios' ? 24 : 10, gap: 6,
-        borderTopWidth: 1, borderTopColor: theme.colors.border,
-        backgroundColor: theme.colors.surface
+        borderTopWidth: 1, borderTopColor: theme.colors.glass.border,
+        backgroundColor: theme.colors.background.primary
     },
     attachBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
     msgInput: {
-        flex: 1, backgroundColor: theme.colors.surface2,
-        borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
-        color: theme.colors.text, fontSize: 14, maxHeight: 100,
-        borderWidth: 1, borderColor: theme.colors.border,
+        flex: 1, backgroundColor: theme.colors.background.secondary,
+        borderRadius: 20, paddingHorizontal: 15, paddingVertical: 10,
+        color: theme.colors.text.primary, fontSize: 14, maxHeight: 100,
+        borderWidth: 1, borderColor: theme.colors.glass.border,
     },
     sendBtn: {
         width: 40, height: 40, borderRadius: 20,

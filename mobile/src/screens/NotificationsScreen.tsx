@@ -66,7 +66,7 @@ export default function NotificationsScreen() {
             case 'crush_reveal': return theme.colors.accent;
             case 'message': return theme.colors.success;
             case 'report_update': return theme.colors.warning;
-            default: return theme.colors.textMuted;
+            default: return theme.colors.text.muted;
         }
     };
 
@@ -112,7 +112,7 @@ export default function NotificationsScreen() {
 
     const renderItem = ({ item }: { item: Notification }) => (
         <TouchableOpacity style={[styles.card, !item.read && styles.unreadCard]} onPress={() => handlePress(item)} activeOpacity={0.7}>
-            <View style={[styles.iconCircle, { backgroundColor: item.read ? theme.colors.surface3 : theme.colors.surface2 }]}>
+            <View style={[styles.iconCircle, { backgroundColor: item.read ? theme.colors.background.tertiary : theme.colors.background.secondary }]}>
                 <Ionicons name={getIcon(item.type) as any} size={20} color={getColor(item.type)} />
             </View>
             <View style={styles.content}>
@@ -128,7 +128,7 @@ export default function NotificationsScreen() {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+                    <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Activity</Text>
                 {notifications.some(n => !n.read) && (
@@ -151,7 +151,7 @@ export default function NotificationsScreen() {
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
                     ListEmptyComponent={
                         <View style={styles.center}>
-                            <Ionicons name="notifications-off-outline" size={48} color={theme.colors.textMuted} />
+                            <Ionicons name="notifications-off-outline" size={48} color={theme.colors.text.muted} />
                             <Text style={styles.emptyText}>No notifications yet</Text>
                         </View>
                     }
@@ -162,23 +162,23 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         paddingHorizontal: 16, paddingTop: 50, paddingBottom: 16,
-        borderBottomWidth: 1, borderBottomColor: theme.colors.border,
-        backgroundColor: theme.colors.surface2,
+        borderBottomWidth: 1, borderBottomColor: theme.colors.glass.border,
+        backgroundColor: theme.colors.background.secondary,
     },
     backBtn: { padding: 4 },
-    headerTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text },
+    headerTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text.primary },
     list: { padding: 16, paddingBottom: 32 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 400 },
 
     card: {
         flexDirection: 'row', alignItems: 'flex-start',
         padding: 16, marginBottom: 12, borderRadius: 12,
-        backgroundColor: theme.colors.surface,
-        borderWidth: 1, borderColor: theme.colors.border,
+        backgroundColor: theme.colors.background.primary,
+        borderWidth: 1, borderColor: theme.colors.glass.border,
     },
     unreadCard: {
         backgroundColor: 'rgba(139,92,246,0.05)',
@@ -189,10 +189,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center', alignItems: 'center', marginRight: 12,
     },
     content: { flex: 1 },
-    title: { fontSize: 15, fontWeight: '600', color: theme.colors.text, marginBottom: 4 },
+    title: { fontSize: 15, fontWeight: '600', color: theme.colors.text.primary, marginBottom: 4 },
     unreadText: { color: theme.colors.primaryLight },
-    body: { fontSize: 13, color: theme.colors.textMuted, lineHeight: 18 },
-    time: { fontSize: 11, color: theme.colors.textSubtle, marginTop: 6 },
+    body: { fontSize: 13, color: theme.colors.text.muted, lineHeight: 18 },
+    time: { fontSize: 11, color: theme.colors.text.subtle, marginTop: 6 },
     dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.primary, marginTop: 6 },
-    emptyText: { marginTop: 12, color: theme.colors.textMuted },
+    emptyText: { marginTop: 12, color: theme.colors.text.muted },
 });

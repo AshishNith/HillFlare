@@ -111,20 +111,20 @@ export default function ChatScreen() {
 
                         {/* Search */}
                         <View style={s.searchWrap}>
-                            <Ionicons name="search-outline" size={16} color={theme.colors.textMuted} />
+                            <Ionicons name="search-outline" size={16} color={theme.colors.text.muted} />
                             <TextInput
                                 style={s.searchInput}
                                 placeholder="Search"
-                                placeholderTextColor={theme.colors.textMuted}
+                                placeholderTextColor={theme.colors.text.muted}
                             />
                         </View>
                     </>
                 }
                 ListEmptyComponent={
                     <View style={{ alignItems: 'center', paddingTop: 60 }}>
-                        <Ionicons name="chatbubble-outline" size={40} color={theme.colors.textSubtle} style={{ marginBottom: 12 }} />
-                        <Text style={{ color: theme.colors.textMuted, fontSize: 16 }}>No conversations yet</Text>
-                        <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginTop: 4 }}>Match with someone to start chatting!</Text>
+                        <Ionicons name="chatbubble-outline" size={40} color={theme.colors.text.subtle} style={{ marginBottom: 12 }} />
+                        <Text style={{ color: theme.colors.text.muted, fontSize: 16 }}>No conversations yet</Text>
+                        <Text style={{ color: theme.colors.text.muted, fontSize: 13, marginTop: 4 }}>Match with someone to start chatting!</Text>
                     </View>
                 }
                 renderItem={({ item }) => {
@@ -168,19 +168,19 @@ function getTimeAgo(dateStr: string) {
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
 
     listHeader: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
-    listTitle: { fontSize: 28, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.5 },
+    listTitle: { fontSize: 28, fontWeight: '800', color: theme.colors.text.primary, letterSpacing: -0.5 },
 
     matchesSection: { paddingTop: 16, paddingBottom: 8 },
-    matchesLabel: { fontSize: 11, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 1.5, paddingHorizontal: 20, marginBottom: 12 },
+    matchesLabel: { fontSize: 11, fontWeight: '700', color: theme.colors.text.muted, letterSpacing: 1.5, paddingHorizontal: 20, marginBottom: 12 },
     matchesRow: { paddingHorizontal: 16, gap: 12 },
     matchItem: { alignItems: 'center', width: 64 },
     matchAvatarWrap: { position: 'relative', marginBottom: 6 },
     matchAvatar: {
         width: 60, height: 60, borderRadius: 30,
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
         borderWidth: 2, borderColor: theme.colors.primary,
         justifyContent: 'center', alignItems: 'center',
     },
@@ -189,20 +189,20 @@ const s = StyleSheet.create({
         position: 'absolute', bottom: 1, right: 1,
         width: 12, height: 12, borderRadius: 6,
         backgroundColor: theme.colors.success,
-        borderWidth: 2, borderColor: theme.colors.surface,
+        borderWidth: 2, borderColor: theme.colors.background.primary,
     },
-    matchName: { fontSize: 12, fontWeight: '600', color: theme.colors.text, textAlign: 'center' },
-    matchAge: { fontSize: 11, color: theme.colors.textMuted, textAlign: 'center' },
+    matchName: { fontSize: 12, fontWeight: '600', color: theme.colors.text.primary, textAlign: 'center' },
+    matchAge: { fontSize: 11, color: theme.colors.text.muted, textAlign: 'center' },
 
     searchWrap: {
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         marginHorizontal: 16, marginVertical: 12,
         borderRadius: 12, paddingHorizontal: 14,
-        borderWidth: 1, borderColor: theme.colors.border,
+        borderWidth: 1, borderColor: theme.colors.glass.border,
     },
     searchIcon: { fontSize: 14, marginRight: 8, opacity: 0.5 },
-    searchInput: { flex: 1, paddingVertical: 12, color: theme.colors.text, fontSize: 15 },
+    searchInput: { flex: 1, paddingVertical: 12, color: theme.colors.text.primary, fontSize: 15 },
 
     chatItem: {
         flexDirection: 'row', alignItems: 'center',
@@ -211,12 +211,12 @@ const s = StyleSheet.create({
     chatAvatarWrap2: { position: 'relative' },
     chatAvatar: {
         width: 52, height: 52, borderRadius: 26,
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
         justifyContent: 'center', alignItems: 'center',
     },
     chatInitial: { fontSize: 20, fontWeight: '700', color: theme.colors.primaryLight },
     chatItemTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
-    chatName: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
-    chatTime: { fontSize: 12, color: theme.colors.textMuted },
-    chatLast: { fontSize: 13, color: theme.colors.textMuted },
+    chatName: { fontSize: 15, fontWeight: '600', color: theme.colors.text.primary },
+    chatTime: { fontSize: 12, color: theme.colors.text.muted },
+    chatLast: { fontSize: 13, color: theme.colors.text.muted },
 });

@@ -78,12 +78,22 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response): Promis
             toUser: user._id
         });
 
+        // Check if there's a mutual match (connected)
+        const { Match } = await import('../models/Match');
+        const match = await Match.findOne({
+            $or: [
+                { user1: req.user!._id, user2: user._id },
+                { user1: user._id, user2: req.user!._id },
+            ],
+        });
+
         res.json({
             success: true,
             data: {
                 ...user.toObject(),
                 hasSwiped: !!existingSwipe,
-                swipeType: existingSwipe?.type
+                swipeType: existingSwipe?.type,
+                isConnected: !!match
             }
         });
     } catch (error) {
@@ -130,7 +140,7 @@ router.post('/photos/upload', authenticate, async (req: AuthRequest, res: Respon
         }
 
         const uploadResult = await cloudinary.uploader.upload(image, {
-            folder: `campusconnect/profiles/${user._id}`,
+            folder: `hillflare/profiles/${user._id}`,
             resource_type: 'image',
             transformation: [{ quality: 'auto', fetch_format: 'auto', width: 800, height: 800, crop: 'limit' }],
         });

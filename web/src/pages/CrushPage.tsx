@@ -24,11 +24,29 @@ export default function CrushPage() {
     const [revealed, setRevealed] = useState<RevealedUser[]>([]);
     const [browseUsers, setBrowseUsers] = useState<BrowseUser[]>([]);
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [browsing, setBrowsing] = useState(false);
     const [showReveal, setShowReveal] = useState(false);
 
     useEffect(() => { fetchData(); }, []);
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Load profiles when debounced search changes
+    useEffect(() => {
+        if (browsing && debouncedSearch.trim()) {
+            loadBrowseProfiles();
+        } else if (browsing && !debouncedSearch.trim()) {
+            setBrowseUsers([]);
+        }
+    }, [debouncedSearch, browsing]);
 
     const fetchData = async () => {
         try {
@@ -42,9 +60,13 @@ export default function CrushPage() {
     };
 
     const loadBrowseProfiles = async () => {
-        setBrowsing(true);
+        if (!debouncedSearch.trim()) {
+            return;
+        }
         try {
-            const { data } = await api.get('/explore?limit=20');
+            const { data } = await api.get('/explore', { 
+                params: { search: debouncedSearch.trim(), limit: 20 } 
+            });
             setBrowseUsers(data.data || []);
         } catch { }
     };
@@ -211,26 +233,32 @@ export default function CrushPage() {
                     </h2>
 
                     {!browsing ? (
-                        <button onClick={loadBrowseProfiles} className="btn-primary w-full py-3.5 text-sm justify-center">
-                            Browse Profiles
+                        <button onClick={() => setBrowsing(true)} className="btn-primary w-full py-3.5 text-sm justify-center">
+                            Search Profiles
                         </button>
                     ) : (
                         <>
                             <div className="relative mb-4">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                                 <input
-                                    type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                                    type="text" 
+                                    value={search} 
+                                    onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search by name or department..."
                                     className="search-field"
                                     autoFocus
                                 />
-                                <button onClick={() => setBrowsing(false)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors">
+                                <button onClick={() => { setBrowsing(false); setSearch(''); setBrowseUsers([]); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors">
                                     <X size={16} />
                                 </button>
                             </div>
 
                             <div className="space-y-2 max-h-80 overflow-y-auto pr-1 customize-scrollbar">
-                                {filteredUsers.length > 0 ? filteredUsers.map((user) => (
+                                {!search.trim() ? (
+                                    <div className="text-center py-8">
+                                        <p className="text-text-muted text-sm">Enter a name or department to search</p>
+                                    </div>
+                                ) : filteredUsers.length > 0 ? filteredUsers.map((user) => (
                                     <motion.div key={user._id}
                                         className="list-row rounded-xl group"
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}

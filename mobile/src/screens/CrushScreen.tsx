@@ -12,6 +12,7 @@ export default function CrushScreen() {
     const [revealed, setRevealed] = useState<any[]>([]);
     const [browseUsers, setBrowseUsers] = useState<any[]>([]);
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [browsing, setBrowsing] = useState(false);
     const [browseLoading, setBrowseLoading] = useState(false);
@@ -20,6 +21,27 @@ export default function CrushScreen() {
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Debounce search
+    useEffect(() => {
+        if (browsing && search.trim()) {
+            setBrowseLoading(true);
+        }
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search, browsing]);
+
+    // Load profiles when debounced search changes
+    useEffect(() => {
+        if (browsing && debouncedSearch.trim()) {
+            loadBrowseProfiles();
+        } else if (browsing && !debouncedSearch.trim()) {
+            setBrowseUsers([]);
+            setBrowseLoading(false);
+        }
+    }, [debouncedSearch, browsing]);
 
     const fetchData = async () => {
         try {
@@ -36,10 +58,14 @@ export default function CrushScreen() {
     };
 
     const loadBrowseProfiles = async () => {
+        if (!debouncedSearch.trim()) {
+            return;
+        }
         setBrowseLoading(true);
-        setBrowsing(true);
         try {
-            const { data } = await api.get('/explore?limit=30');
+            const { data } = await api.get('/explore', { 
+                params: { search: debouncedSearch.trim(), limit: 30 } 
+            });
             setBrowseUsers(data.data || []);
         } catch (err) {
             console.log('Browse error:', err);
@@ -141,7 +167,7 @@ export default function CrushScreen() {
                                     </View>
                                 ) : (
                                     <View style={[styles.slot, styles.slotEmpty]}>
-                                        <Ionicons name="add" size={24} color={theme.colors.textSubtle} style={{ marginBottom: 4 }} />
+                                        <Ionicons name="add" size={24} color={theme.colors.text.subtle} style={{ marginBottom: 4 }} />
                                         <Text style={styles.slotEmptyLabel}>Empty</Text>
                                     </View>
                                 )}
@@ -186,21 +212,33 @@ export default function CrushScreen() {
                     <Text style={styles.sectionTitle}>Add a Crush</Text>
 
                     {!browsing ? (
-                        <TouchableOpacity style={styles.browseBtn} onPress={loadBrowseProfiles}>
-                            <Text style={styles.browseBtnText}>Browse Profiles</Text>
+                        <TouchableOpacity style={styles.browseBtn} onPress={() => setBrowsing(true)}>
+                            <Text style={styles.browseBtnText}>Search Profiles</Text>
                         </TouchableOpacity>
-                    ) : browseLoading ? (
-                        <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginVertical: 20 }} />
                     ) : (
                         <View>
-                            <TextInput
-                                style={styles.searchInput}
-                                value={search}
-                                onChangeText={setSearch}
-                                placeholder="Search by name or department..."
-                                placeholderTextColor={theme.colors.textMuted}
-                            />
-                            {filteredUsers.length > 0 ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                <TextInput
+                                    style={[styles.searchInput, { flex: 1 }]}
+                                    value={search}
+                                    onChangeText={setSearch}
+                                    placeholder="Search by name or department..."
+                                    placeholderTextColor={theme.colors.text.muted}
+                                    autoFocus
+                                />
+                                <TouchableOpacity 
+                                    onPress={() => { setBrowsing(false); setSearch(''); setBrowseUsers([]); }}
+                                    style={{ marginLeft: 8, padding: 8 }}
+                                >
+                                    <Ionicons name="close" size={20} color={theme.colors.text.muted} />
+                                </TouchableOpacity>
+                            </View>
+
+                            {browseLoading ? (
+                                <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginVertical: 20 }} />
+                            ) : !search.trim() ? (
+                                <Text style={styles.emptyText}>Enter a name or department to search</Text>
+                            ) : filteredUsers.length > 0 ? (
                                 filteredUsers.slice(0, 15).map((u) => (
                                     <View key={u._id} style={styles.browseItem}>
                                         <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: u._id })}>
@@ -236,24 +274,24 @@ export default function CrushScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface, padding: 20, marginTop: 30 },
-    title: { fontSize: 28, fontWeight: 'bold', color: theme.colors.text, marginBottom: 4 },
-    subtitle: { fontSize: 13, color: theme.colors.textMuted, marginBottom: 24, lineHeight: 18 },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary, padding: 20, marginTop: 30 },
+    title: { fontSize: 28, fontWeight: 'bold', color: theme.colors.text.primary, marginBottom: 4 },
+    subtitle: { fontSize: 13, color: theme.colors.text.muted, marginBottom: 24, lineHeight: 18 },
 
     sectionCard: {
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         borderRadius: 16,
         padding: 20,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: theme.colors.border,
+        borderColor: theme.colors.glass.border,
     },
     sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-    sectionTitle: { fontSize: 16, fontWeight: 'bold', color: theme.colors.text },
+    sectionTitle: { fontSize: 16, fontWeight: 'bold', color: theme.colors.text.primary },
     dotsRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(155,143,199,0.2)' },
     dotFilled: { backgroundColor: '#EC4899' },
-    slotCount: { fontSize: 12, color: theme.colors.textMuted, marginLeft: 6 },
+    slotCount: { fontSize: 12, color: theme.colors.text.muted, marginLeft: 6 },
 
     slotContainer: {
         flex: 1,
@@ -266,19 +304,19 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         borderStyle: 'dashed',
-        borderColor: theme.colors.borderStrong,
+        borderColor: theme.colors.glass.borderStrong,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
     },
     slotFilled: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: theme.colors.borderStrong,
+        borderColor: theme.colors.glass.borderStrong,
         borderRadius: 16,
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
     },
     slotEmpty: {
         justifyContent: 'center',
@@ -303,17 +341,17 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     slotInitial: { fontSize: 20, fontWeight: 'bold', color: theme.colors.primaryLight },
-    slotName: { fontSize: 12, fontWeight: '600', color: theme.colors.text, textAlign: 'center' },
-    slotDept: { fontSize: 10, color: theme.colors.textMuted, textAlign: 'center', marginTop: 2 },
-    removeTip: { fontSize: 9, color: theme.colors.textMuted, marginTop: 6, opacity: 0.5 },
-    slotEmptyLabel: { fontSize: 11, color: theme.colors.textMuted, opacity: 0.4 },
+    slotName: { fontSize: 12, fontWeight: '600', color: theme.colors.text.primary, textAlign: 'center' },
+    slotDept: { fontSize: 10, color: theme.colors.text.muted, textAlign: 'center', marginTop: 2 },
+    removeTip: { fontSize: 9, color: theme.colors.text.muted, marginTop: 6, opacity: 0.5 },
+    slotEmptyLabel: { fontSize: 11, color: theme.colors.text.muted, opacity: 0.4 },
 
     revealTitle: { fontSize: 16, fontWeight: 'bold', color: theme.colors.primaryLight, marginBottom: 12 },
     revealCard: {
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: theme.colors.borderStrong,
-        backgroundColor: theme.colors.surface3,
+        borderColor: theme.colors.glass.borderStrong,
+        backgroundColor: theme.colors.background.tertiary,
         marginBottom: 8,
         overflow: 'hidden',
     },
@@ -336,13 +374,13 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: theme.colors.surface4,
+        backgroundColor: theme.colors.background.tertiary,
         justifyContent: 'center',
         alignItems: 'center',
     },
     revealInitial: { fontSize: 16, fontWeight: 'bold', color: theme.colors.primaryLight },
     revealName: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
-    revealDept: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
+    revealDept: { fontSize: 12, color: theme.colors.text.muted, marginTop: 2 },
 
     browseBtn: {
         backgroundColor: theme.colors.primary,
@@ -354,14 +392,14 @@ const styles = StyleSheet.create({
     browseBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
 
     searchInput: {
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
         borderRadius: 12,
         padding: 12,
         color: theme.colors.text,
         fontSize: 14,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: theme.colors.border,
+        borderColor: theme.colors.glass.border,
     },
     browseItem: {
         flexDirection: 'row',
@@ -381,7 +419,7 @@ const styles = StyleSheet.create({
     },
     browseInitial: { fontSize: 16, fontWeight: 'bold', color: '#A78BFA' },
     browseName: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
-    browseDept: { fontSize: 12, color: theme.colors.textMuted, marginTop: 1 },
+    browseDept: { fontSize: 12, color: theme.colors.text.muted, marginTop: 1 },
     pickBtn: {
         backgroundColor: theme.colors.primary,
         borderRadius: 10,
@@ -389,5 +427,5 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
     },
     pickBtnText: { color: '#fff', fontWeight: '600', fontSize: 12 },
-    emptyText: { color: theme.colors.textMuted, textAlign: 'center', paddingVertical: 24, fontSize: 14 },
+    emptyText: { color: theme.colors.text.muted, textAlign: 'center', paddingVertical: 24, fontSize: 14 },
 });

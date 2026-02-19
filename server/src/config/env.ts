@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
     PORT: z.string().default('5000'),
-    MONGODB_URI: z.string().default('mongodb://localhost:27017/campusconnect'),
+    MONGODB_URI: z.string().default('mongodb://localhost:27017/hillflare'),
     JWT_SECRET: z.string().default('dev-jwt-secret'),
     JWT_REFRESH_SECRET: z.string().default('dev-refresh-secret'),
     SMTP_HOST: z.string().default('smtp.gmail.com'),

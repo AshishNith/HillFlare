@@ -1,16 +1,16 @@
 {
     "expo": {
-        "name": "CampusConnect",
-        "slug": "campusconnect",
+        "name": "HillFlare",
+        "slug": "hillflare",
         "version": "1.0.0",
         "orientation": "portrait",
-        "scheme": "campusconnect",
+        "scheme": "hillflare",
         "userInterfaceStyle": "dark",
         "splash": {
             "backgroundColor": "#0F0B1A"
         },
         "android": {
-            "package": "com.campusconnect.app",
+            "package": "com.hillflare.app",
             "adaptiveIcon": {
                 "backgroundColor": "#0F0B1A"
             }

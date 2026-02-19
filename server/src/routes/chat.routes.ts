@@ -158,7 +158,7 @@ router.post('/:chatId/image', authenticate, messageLimiter, async (req: AuthRequ
 
         // Upload to Cloudinary
         const uploadResult = await cloudinary.uploader.upload(image, {
-            folder: 'campusconnect/chat',
+            folder: 'hillflare/chat',
             resource_type: 'image',
             transformation: [{ quality: 'auto', fetch_format: 'auto', width: 1200, crop: 'limit' }],
         });

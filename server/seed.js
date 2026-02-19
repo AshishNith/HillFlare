@@ -5,7 +5,7 @@
 
 const mongoose = require('mongoose');
 
-const MONGODB_URI = 'mongodb://localhost:27017/campusconnect';
+const MONGODB_URI = 'mongodb://localhost:27017/hillflare';
 
 const userSchema = new mongoose.Schema(
     {

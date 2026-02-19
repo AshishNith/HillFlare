@@ -68,12 +68,12 @@ const start = async () => {
 
     server.listen(parseInt(env.PORT), '0.0.0.0', () => {
         console.log(`
-🚀 CampusConnect Server running!
-   Port: ${env.PORT}
-   Environment: ${env.NODE_ENV}
-   MongoDB: Connected
-   Socket.io: Ready
-    `);
+    🚀 HillFlare Server running!
+       Port: ${env.PORT}
+       Environment: ${env.NODE_ENV}
+       MongoDB: Connected
+       Socket.io: Ready
+        `);
     });
 };
 

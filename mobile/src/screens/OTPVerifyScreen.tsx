@@ -40,11 +40,11 @@ export default function OTPVerifyScreen({ navigation, route }: any) {
 
     return (
         <KeyboardAvoidingView style={s.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <StatusBar barStyle="light-content" backgroundColor={theme.colors.surface} />
+            <StatusBar barStyle="light-content" backgroundColor={theme.colors.background.primary} />
 
             {/* Back button — flat */}
             <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
-                <Ionicons name="arrow-back" size={22} color={theme.colors.text} />
+                <Ionicons name="arrow-back" size={22} color={theme.colors.text.primary} />
             </TouchableOpacity>
 
             {/* Top */}
@@ -87,7 +87,7 @@ export default function OTPVerifyScreen({ navigation, route }: any) {
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
     back: { position: 'absolute', top: 52, left: 20, zIndex: 10, padding: 8 },
 
     top: {
@@ -96,13 +96,13 @@ const s = StyleSheet.create({
         paddingHorizontal: 28,
         paddingTop: 80,
     },
-    title: { fontSize: 26, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.5, marginBottom: 10 },
-    sub: { fontSize: 15, color: theme.colors.textMuted, marginBottom: 4 },
-    email: { fontSize: 15, color: theme.colors.text, fontWeight: '600' },
+    title: { fontSize: 26, fontWeight: '800', color: theme.colors.text.primary, letterSpacing: -0.5, marginBottom: 10 },
+    sub: { fontSize: 15, color: theme.colors.text.muted, marginBottom: 4 },
+    email: { fontSize: 15, color: theme.colors.text.primary, fontWeight: '600' },
 
     // Flat form section
     form: {
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         padding: 28,
         paddingBottom: 48,
     },
@@ -110,12 +110,12 @@ const s = StyleSheet.create({
     otpBox: {
         flex: 1,
         height: 52,
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
         borderRadius: 8,
         textAlign: 'center',
         fontSize: 22,
         fontWeight: '700',
-        color: theme.colors.text,
+        color: theme.colors.text.primary,
     },
     otpBoxFilled: {
         backgroundColor: 'rgba(139,92,246,0.12)',
@@ -132,5 +132,5 @@ const s = StyleSheet.create({
     buttonDisabled: { opacity: 0.6 },
     buttonText: { color: '#fff', fontWeight: '700', fontSize: 15 },
     resend: { alignItems: 'center' },
-    resendText: { color: theme.colors.textMuted, fontSize: 13 },
+    resendText: { color: theme.colors.text.muted, fontSize: 13 },
 });

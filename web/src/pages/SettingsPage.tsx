@@ -107,7 +107,7 @@ export default function SettingsPage() {
                     <div className="card p-6">
                         <h2 className="font-bold text-lg mb-4">About</h2>
                         <div className="text-text-muted text-sm space-y-2">
-                            <p>CampusConnect v1.0.0</p>
+                            <p>HillFlare v1.0.0</p>
                             <a href="#" className="text-primary-light hover:text-primary block">Privacy Policy</a>
                             <a href="#" className="text-primary-light hover:text-primary block">Terms of Service</a>
                         </div>

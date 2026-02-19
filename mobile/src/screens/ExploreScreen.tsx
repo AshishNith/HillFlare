@@ -17,6 +17,7 @@ export default function ExploreScreen() {
     const navigation = useNavigation<any>();
     const [profiles, setProfiles] = useState<any[]>([]);
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [focused, setFocused] = useState(false);
@@ -37,13 +38,31 @@ export default function ExploreScreen() {
 
     const activeFilterCount = [appliedDept, appliedInterest, appliedYear].filter(Boolean).length;
 
+    // Debounce search
     useEffect(() => {
-        fetchProfiles();
-    }, [appliedDept, appliedInterest, appliedYear]);
+        if (search.trim()) {
+            setLoading(true);
+        }
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Fetch when search or filters change
+    useEffect(() => {
+        if (debouncedSearch.trim() || appliedDept || appliedInterest || appliedYear) {
+            fetchProfiles();
+        } else {
+            setProfiles([]);
+            setLoading(false);
+        }
+    }, [debouncedSearch, appliedDept, appliedInterest, appliedYear]);
 
     const fetchProfiles = async () => {
         try {
             const params: Record<string, string> = {};
+            if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
             if (appliedDept) params.department = appliedDept;
             if (appliedInterest) params.interest = appliedInterest;
             if (appliedYear) params.year = appliedYear;
@@ -101,26 +120,18 @@ export default function ExploreScreen() {
         setAppliedYear('');
     };
 
-    const filtered = profiles.filter(p => {
-        if (!search) return true;
-        return (
-            p.name?.toLowerCase().includes(search.toLowerCase()) ||
-            p.department?.toLowerCase().includes(search.toLowerCase()) ||
-            p.interests?.some((i: string) => i.toLowerCase().includes(search.toLowerCase()))
-        );
-    });
-
     const getHue = (id: string) => (id.charCodeAt(0) * 47 + (id.charCodeAt(1) || 0) * 13) % 360;
+    const hasSearchOrFilters = debouncedSearch.trim() || activeFilterCount > 0;
 
     return (
         <View style={s.container}>
-            <StatusBar barStyle="light-content" backgroundColor={theme.colors.surface} />
+            <StatusBar barStyle="light-content" backgroundColor={theme.colors.background.primary} />
 
             {/* Header */}
             <View style={s.header}>
                 <View>
                     <Text style={s.title}>Explore</Text>
-                    <Text style={s.subtitle}>{filtered.length} people found</Text>
+                    <Text style={s.subtitle}>{profiles.length} people found</Text>
                 </View>
             </View>
 
@@ -132,7 +143,7 @@ export default function ExploreScreen() {
                         <Ionicons
                             name="search-outline"
                             size={17}
-                            color={focused ? theme.colors.primary : theme.colors.textMuted}
+                            color={focused ? theme.colors.primary : theme.colors.text.muted}
                         />
                         <TextInput
                             ref={inputRef}
@@ -142,7 +153,7 @@ export default function ExploreScreen() {
                             onFocus={onFocus}
                             onBlur={onBlur}
                             placeholder="Search name, department..."
-                            placeholderTextColor={theme.colors.textSubtle}
+                            placeholderTextColor={theme.colors.text.subtle}
                             returnKeyType="search"
                             autoCorrect={false}
                             autoCapitalize="none"
@@ -150,7 +161,7 @@ export default function ExploreScreen() {
                         {search.length > 0 && (
                             <TouchableOpacity onPress={() => { setSearch(''); inputRef.current?.focus(); }}
                                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                                <Ionicons name="close-circle" size={17} color={theme.colors.textMuted} />
+                                <Ionicons name="close-circle" size={17} color={theme.colors.text.muted} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -164,7 +175,7 @@ export default function ExploreScreen() {
                     <Ionicons
                         name="options-outline"
                         size={20}
-                        color={activeFilterCount > 0 ? theme.colors.primary : theme.colors.textMuted}
+                        color={activeFilterCount > 0 ? theme.colors.primary : theme.colors.text.muted}
                     />
                     {activeFilterCount > 0 && (
                         <View style={s.filterBadge}>
@@ -204,13 +215,13 @@ export default function ExploreScreen() {
             <View style={s.divider} />
 
             {/* Grid */}
-            {loading ? (
+            {loading && hasSearchOrFilters ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             ) : (
                 <FlatList
-                    data={filtered}
+                    data={profiles}
                     keyExtractor={item => item._id}
                     numColumns={2}
                     columnWrapperStyle={{ gap: 1 }}
@@ -218,9 +229,33 @@ export default function ExploreScreen() {
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
                     ListEmptyComponent={
                         <View style={{ alignItems: 'center', paddingTop: 60, gap: 8 }}>
-                            <Ionicons name="search-outline" size={36} color={theme.colors.textSubtle} />
-                            <Text style={{ color: theme.colors.textMuted, fontSize: 15, fontWeight: '600' }}>No profiles found</Text>
-                            <Text style={{ color: theme.colors.textSubtle, fontSize: 13 }}>Try adjusting your search or filters</Text>
+                            {!hasSearchOrFilters ? (
+                                <>
+                                    <Ionicons name="search-outline" size={36} color={theme.colors.text.subtle} />
+                                    <Text style={{ color: theme.colors.text.muted, fontSize: 15, fontWeight: '600' }}>Ready to explore?</Text>
+                                    <Text style={{ color: theme.colors.text.subtle, fontSize: 13, textAlign: 'center', paddingHorizontal: 40 }}>
+                                        Search by name or apply filters to discover people
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={{
+                                            marginTop: 12,
+                                            paddingHorizontal: 20,
+                                            paddingVertical: 10,
+                                            backgroundColor: theme.colors.primary,
+                                            borderRadius: 20,
+                                        }}
+                                        onPress={openFilter}
+                                    >
+                                        <Text style={{ color: '#fff', fontWeight: '600' }}>Apply Filters</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <>
+                                    <Ionicons name="search-outline" size={36} color={theme.colors.text.subtle} />
+                                    <Text style={{ color: theme.colors.text.muted, fontSize: 15, fontWeight: '600' }}>No profiles found</Text>
+                                    <Text style={{ color: theme.colors.text.subtle, fontSize: 13 }}>Try adjusting your filters</Text>
+                                </>
+                            )}
                         </View>
                     }
                     renderItem={({ item }) => {
@@ -263,7 +298,7 @@ export default function ExploreScreen() {
                     <View style={s.sheetHeader}>
                         <Text style={s.sheetTitle}>Filters</Text>
                         <TouchableOpacity onPress={closeFilter}>
-                            <Ionicons name="close" size={22} color={theme.colors.textMuted} />
+                            <Ionicons name="close" size={22} color={theme.colors.text.muted} />
                         </TouchableOpacity>
                     </View>
 
@@ -337,25 +372,25 @@ export default function ExploreScreen() {
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
     header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 12 },
-    title: { fontSize: 26, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.5 },
-    subtitle: { fontSize: 13, color: theme.colors.textMuted, marginTop: 2 },
+    title: { fontSize: 26, fontWeight: '800', color: theme.colors.text.primary, letterSpacing: -0.5 },
+    subtitle: { fontSize: 13, color: theme.colors.text.muted, marginTop: 2 },
 
     searchRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10, paddingBottom: 4 },
     searchBarWrap: { flex: 1 },
     searchBar: {
         flexDirection: 'row', alignItems: 'center', gap: 8,
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
     },
-    searchInput: { flex: 1, color: theme.colors.text, fontSize: 14, paddingVertical: 0 },
+    searchInput: { flex: 1, color: theme.colors.text.primary, fontSize: 14, paddingVertical: 0 },
     underlineTrack: { height: 2, backgroundColor: 'transparent', marginTop: 2, overflow: 'hidden' },
     underlineFill: { height: 2, backgroundColor: theme.colors.primary, borderRadius: 1 },
 
     filterBtn: {
         width: 42, height: 42,
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         borderRadius: 8,
         justifyContent: 'center', alignItems: 'center',
     },
@@ -379,14 +414,14 @@ const s = StyleSheet.create({
     tagText: { fontSize: 12, fontWeight: '600', color: theme.colors.primaryLight },
     clearAll: { fontSize: 12, fontWeight: '600', color: theme.colors.primary, marginLeft: 4 },
 
-    divider: { height: 1, backgroundColor: theme.colors.border },
+    divider: { height: 1, backgroundColor: theme.colors.glass.border },
 
-    cell: { flex: 1, backgroundColor: theme.colors.surface2, padding: 16, alignItems: 'center' },
+    cell: { flex: 1, backgroundColor: theme.colors.background.secondary, padding: 16, alignItems: 'center' },
     avatar: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
     avatarImg: { width: 56, height: 56, borderRadius: 28, marginBottom: 10 },
     initials: { fontSize: 22, fontWeight: '700' },
-    name: { fontSize: 14, fontWeight: '600', color: theme.colors.text, marginBottom: 2, textAlign: 'center' },
-    dept: { fontSize: 11, color: theme.colors.textMuted, marginBottom: 8, textAlign: 'center' },
+    name: { fontSize: 14, fontWeight: '600', color: theme.colors.text.primary, marginBottom: 2, textAlign: 'center' },
+    dept: { fontSize: 11, color: theme.colors.text.muted, marginBottom: 8, textAlign: 'center' },
     scoreBadge: { backgroundColor: 'rgba(34, 197, 94, 0.1)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
     scoreText: { fontSize: 11, fontWeight: '600', color: theme.colors.success },
 
@@ -394,7 +429,7 @@ const s = StyleSheet.create({
     backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
     sheet: {
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
         borderTopLeftRadius: 20, borderTopRightRadius: 20,
         maxHeight: '80%',
         paddingHorizontal: 20,
@@ -403,35 +438,36 @@ const s = StyleSheet.create({
     },
     handle: {
         width: 36, height: 4, borderRadius: 2,
-        backgroundColor: theme.colors.surface5,
+        backgroundColor: theme.colors.background.tertiary,
         alignSelf: 'center', marginBottom: 16,
     },
     sheetHeader: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
         marginBottom: 20,
     },
-    sheetTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text },
+    sheetTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text.primary },
 
     filterSection: { marginBottom: 24 },
     filterLabel: {
-        fontSize: 11, fontWeight: '700', color: theme.colors.textMuted,
+        fontSize: 11, fontWeight: '700', color: theme.colors.text.muted,
         letterSpacing: 1.2, marginBottom: 10,
     },
     chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
         paddingHorizontal: 14, paddingVertical: 7,
-        borderRadius: 4, backgroundColor: theme.colors.surface3,
+        borderRadius: 4, backgroundColor: theme.colors.background.tertiary,
+        borderWidth: 1, borderColor: theme.colors.glass.border,
     },
-    chipActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
-    chipText: { fontSize: 13, fontWeight: '500', color: theme.colors.textMuted },
+    chipActive: { backgroundColor: 'rgba(139,92,246,0.18)', borderColor: theme.colors.primary },
+    chipText: { fontSize: 13, fontWeight: '500', color: theme.colors.text.muted },
     chipTextActive: { color: theme.colors.primaryLight, fontWeight: '600' },
 
-    sheetActions: { flexDirection: 'row', gap: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.colors.border },
+    sheetActions: { flexDirection: 'row', gap: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.colors.glass.border },
     clearBtn: {
         flex: 1, paddingVertical: 14, borderRadius: 8,
-        backgroundColor: theme.colors.surface3, alignItems: 'center',
+        backgroundColor: theme.colors.background.tertiary, alignItems: 'center',
     },
-    clearBtnText: { fontSize: 15, fontWeight: '600', color: theme.colors.textMuted },
+    clearBtnText: { fontSize: 15, fontWeight: '600', color: theme.colors.text.muted },
     applyBtn: {
         flex: 2, paddingVertical: 14, borderRadius: 8,
         backgroundColor: theme.colors.primary, alignItems: 'center',

@@ -17,16 +17,17 @@ export default function MainTabs() {
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarShowLabel: false,
+                tabBarHideOnKeyboard: true,
                 tabBarStyle: {
-                    backgroundColor: theme.colors.surface2,
-                    borderTopColor: theme.colors.border,
+                    backgroundColor: theme.colors.background.secondary,
+                    borderTopColor: theme.colors.glass.border,
                     borderTopWidth: 1,
                     height: Platform.OS === 'ios' ? 80 : 62,
                     paddingBottom: Platform.OS === 'ios' ? 24 : 6,
                     paddingTop: 6,
                 },
                 tabBarActiveTintColor: theme.colors.primary,
-                tabBarInactiveTintColor: theme.colors.textMuted,
+                tabBarInactiveTintColor: theme.colors.text.muted,
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: keyof typeof Ionicons.glyphMap;
                     switch (route.name) {

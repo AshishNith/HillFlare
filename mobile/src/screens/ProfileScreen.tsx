@@ -199,7 +199,7 @@ export default function ProfileScreen({ route }: any) {
                     style={[s.editBtn, editing && s.editBtnCancel]}
                     onPress={editing ? () => setEditing(false) : startEdit}
                     activeOpacity={0.8}>
-                    <Ionicons name={editing ? 'close' : 'create-outline'} size={16} color={editing ? theme.colors.textMuted : '#fff'} />
+                    <Ionicons name={editing ? 'close' : 'create-outline'} size={16} color={editing ? theme.colors.text.muted : '#fff'} />
                     <Text style={[s.editBtnText, editing && s.editBtnCancelText]}>{editing ? 'Cancel' : 'Edit Profile'}</Text>
                 </TouchableOpacity>
             </View>
@@ -209,7 +209,7 @@ export default function ProfileScreen({ route }: any) {
             {/* ── Photo Grid — always visible ── */}
             <View style={s.section}>
                 <View style={s.sectionLabelRow}>
-                    <Ionicons name="camera-outline" size={13} color={theme.colors.textMuted} />
+                    <Ionicons name="camera-outline" size={13} color={theme.colors.text.muted} />
                     <Text style={s.sectionLabel}>PHOTOS</Text>
                     <Text style={s.sectionCount}>({photos.length}/6)</Text>
                 </View>
@@ -236,7 +236,7 @@ export default function ProfileScreen({ route }: any) {
                         <TouchableOpacity style={s.addPhotoBtn} onPress={pickAndUploadPhoto} disabled={uploading} activeOpacity={0.7}>
                             {uploading
                                 ? <ActivityIndicator color={theme.colors.primary} />
-                                : <Ionicons name="add-circle-outline" size={24} color={theme.colors.textMuted} />}
+                                : <Ionicons name="add-circle-outline" size={24} color={theme.colors.text.muted} />}
                             <Text style={s.addPhotoText}>{uploading ? 'Uploading...' : 'Add Photo'}</Text>
                         </TouchableOpacity>
                     )}
@@ -252,11 +252,11 @@ export default function ProfileScreen({ route }: any) {
                         <Text style={s.sectionLabel}>BASIC INFO</Text>
                         <TextInput style={s.input} value={form.name}
                             onChangeText={t => setForm({ ...form, name: t })}
-                            placeholder="Full Name" placeholderTextColor={theme.colors.textSubtle} />
+                            placeholder="Full Name" placeholderTextColor={theme.colors.text.subtle} />
                         <View style={{ position: 'relative' }}>
                             <TextInput style={[s.input, { height: 88, textAlignVertical: 'top', paddingBottom: 28 }]}
                                 value={form.bio} onChangeText={t => setForm({ ...form, bio: t.slice(0, 300) })}
-                                placeholder="Write a short bio..." placeholderTextColor={theme.colors.textSubtle}
+                                placeholder="Write a short bio..." placeholderTextColor={theme.colors.text.subtle}
                                 multiline maxLength={300} />
                             <Text style={s.charCount}>{form.bio.length}/300</Text>
                         </View>
@@ -348,7 +348,7 @@ export default function ProfileScreen({ route }: any) {
 
                     <View style={s.section}>
                         <View style={s.sectionLabelRow}>
-                            <Ionicons name="heart-outline" size={13} color={theme.colors.textMuted} />
+                            <Ionicons name="heart-outline" size={13} color={theme.colors.text.muted} />
                             <Text style={s.sectionLabel}>INTERESTS</Text>
                         </View>
                         <View style={s.chipGrid}>
@@ -362,7 +362,7 @@ export default function ProfileScreen({ route }: any) {
 
                     <View style={s.section}>
                         <View style={s.sectionLabelRow}>
-                            <Ionicons name="people-outline" size={13} color={theme.colors.textMuted} />
+                            <Ionicons name="people-outline" size={13} color={theme.colors.text.muted} />
                             <Text style={s.sectionLabel}>CLUBS</Text>
                         </View>
                         <View style={s.chipGrid}>
@@ -376,7 +376,7 @@ export default function ProfileScreen({ route }: any) {
 
                     <View style={s.section}>
                         <View style={s.sectionLabelRow}>
-                            <Ionicons name="information-circle-outline" size={13} color={theme.colors.textMuted} />
+                            <Ionicons name="information-circle-outline" size={13} color={theme.colors.text.muted} />
                             <Text style={s.sectionLabel}>ACCOUNT</Text>
                         </View>
                         <View style={s.infoRows}>
@@ -410,12 +410,12 @@ export default function ProfileScreen({ route }: any) {
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
 
     hero: {
         flexDirection: 'row', alignItems: 'flex-start', gap: 16,
         paddingHorizontal: 20, paddingTop: 56, paddingBottom: 24,
-        backgroundColor: theme.colors.surface2,
+        backgroundColor: theme.colors.background.secondary,
     },
     avatarWrap: { flexShrink: 0 },
     avatarRing: {
@@ -433,39 +433,40 @@ const s = StyleSheet.create({
     },
     initials: { fontSize: 22, fontWeight: '800', color: theme.colors.primaryLight },
     heroInfo: { flex: 1, minWidth: 0 },
-    heroName: { fontSize: 20, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.3, marginBottom: 3 },
-    heroDept: { fontSize: 13, color: theme.colors.textMuted, marginBottom: 2 },
-    heroEmail: { fontSize: 11, color: theme.colors.textSubtle },
+    heroName: { fontSize: 20, fontWeight: '800', color: theme.colors.text.primary, letterSpacing: -0.3, marginBottom: 3 },
+    heroDept: { fontSize: 13, color: theme.colors.text.muted, marginBottom: 2 },
+    heroEmail: { fontSize: 11, color: theme.colors.text.subtle },
 
     progressWrap: { marginTop: 12 },
     progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-    progressLabel: { fontSize: 11, color: theme.colors.textMuted, fontWeight: '600' },
+    progressLabel: { fontSize: 11, color: theme.colors.text.muted, fontWeight: '600' },
     progressPct: { fontSize: 11, fontWeight: '700' },
-    progressTrack: { height: 3, backgroundColor: theme.colors.surface4, borderRadius: 2, overflow: 'hidden' },
+    progressTrack: { height: 3, backgroundColor: theme.colors.background.tertiary, borderRadius: 2, overflow: 'hidden' },
     progressFill: { height: 3, borderRadius: 2 },
 
-    editBtnRow: { paddingHorizontal: 20, paddingVertical: 14, backgroundColor: theme.colors.surface },
+    editBtnRow: { paddingHorizontal: 20, paddingVertical: 14, backgroundColor: theme.colors.background.primary },
     editBtn: {
         flexDirection: 'row', alignItems: 'center', gap: 6,
         alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 9,
         borderRadius: 6, backgroundColor: theme.colors.primary,
     },
-    editBtnCancel: { backgroundColor: theme.colors.surface3 },
+    editBtnCancel: { backgroundColor: theme.colors.background.tertiary },
     editBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
-    editBtnCancelText: { color: theme.colors.textMuted },
+    editBtnCancelText: { color: theme.colors.text.muted },
 
-    divider: { height: 1, backgroundColor: theme.colors.border },
+    divider: { height: 1, backgroundColor: theme.colors.glass.border },
 
-    section: { paddingHorizontal: 20, paddingVertical: 20, backgroundColor: theme.colors.surface },
-    sectionLabel: { fontSize: 11, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 1.2, marginBottom: 12 },
+    ca: { paddingHorizontal: 20, paddingVertical: 20, backgroundColor: theme.colors.background.primary },
+    section: { paddingHorizontal: 20, paddingVertical: 20, backgroundColor: theme.colors.background.primary },
+    sectionLabel: { fontSize: 11, fontWeight: '700', color: theme.colors.text.muted, letterSpacing: 1.2, marginBottom: 12 },
     sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-    sectionCount: { fontSize: 11, fontWeight: '400', color: theme.colors.textSubtle, letterSpacing: 0 },
+    sectionCount: { fontSize: 11, fontWeight: '400', color: theme.colors.text.subtle, letterSpacing: 0 },
 
     // Photo grid
-    photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'flex-start' },
     photoCell: {
         width: '31.5%' as any, aspectRatio: 1, borderRadius: 6, overflow: 'hidden',
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary, marginBottom: 12, position: 'relative',
     },
     photoImage: { width: '100%', height: '100%', borderRadius: 6 },
     profileBadge: {
@@ -482,41 +483,42 @@ const s = StyleSheet.create({
     },
     addPhotoBtn: {
         width: '31.5%' as any, aspectRatio: 1, borderRadius: 6,
-        borderWidth: 1, borderStyle: 'dashed', borderColor: theme.colors.borderStrong,
-        backgroundColor: theme.colors.surface2,
-        justifyContent: 'center', alignItems: 'center', gap: 4,
+        borderWidth: 1, borderStyle: 'dashed', borderColor: theme.colors.glass.borderStrong,
+        backgroundColor: theme.colors.background.secondary,
+        justifyContent: 'flex-start', alignItems: 'center', paddingTop: 12, position: 'relative', marginBottom: 12,
     },
-    addPhotoText: { fontSize: 10, color: theme.colors.textMuted, fontWeight: '500' },
+    addPhotoIcon: { marginTop: 6 },
+    addPhotoText: { position: 'absolute', bottom: 8, left: 6, right: 6, textAlign: 'center', fontSize: 10, color: theme.colors.text.muted, fontWeight: '500' },
 
     // View mode
-    bioText: { fontSize: 14, color: theme.colors.textMuted, lineHeight: 22 },
-    emptyText: { fontSize: 13, color: theme.colors.textSubtle },
+    bioText: { fontSize: 14, color: theme.colors.text.muted, lineHeight: 22 },
+    emptyText: { fontSize: 13, color: theme.colors.text.subtle },
 
     viewChip: { backgroundColor: 'rgba(139,92,246,0.1)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 4 },
     viewChipText: { fontSize: 12, fontWeight: '500', color: theme.colors.primaryLight },
 
     infoRows: { gap: 10 },
     infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    infoKey: { fontSize: 13, color: theme.colors.textMuted },
-    infoVal: { fontSize: 13, color: theme.colors.text, fontWeight: '500' },
+    infoKey: { fontSize: 13, color: theme.colors.text.muted },
+    infoVal: { fontSize: 13, color: theme.colors.text.primary, fontWeight: '500' },
 
     // Edit mode
     input: {
-        backgroundColor: theme.colors.surface2, borderRadius: 8, padding: 12,
-        color: theme.colors.text, fontSize: 14, marginBottom: 10,
+        backgroundColor: theme.colors.background.tertiary, borderRadius: 8, padding: 12,
+        color: theme.colors.text.primary, fontSize: 14, marginBottom: 10,
     },
-    charCount: { fontSize: 11, color: theme.colors.textSubtle, textAlign: 'right', marginTop: -6, marginBottom: 10 },
+    charCount: { fontSize: 11, color: theme.colors.text.subtle, textAlign: 'right', marginTop: -6, marginBottom: 10 },
 
     chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 4, backgroundColor: theme.colors.surface2 },
+    chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 4, backgroundColor: theme.colors.background.tertiary },
     chipActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
-    chipText: { fontSize: 13, fontWeight: '500', color: theme.colors.textMuted },
+    chipText: { fontSize: 13, fontWeight: '500', color: theme.colors.text.muted },
     chipTextActive: { color: theme.colors.primaryLight, fontWeight: '600' },
 
     yearRow: { flexDirection: 'row', gap: 10 },
-    yearBtn: { width: 44, height: 44, borderRadius: 6, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.surface2 },
+    yearBtn: { width: 44, height: 44, borderRadius: 6, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background.tertiary },
     yearBtnActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
-    yearBtnText: { fontSize: 15, fontWeight: '700', color: theme.colors.textMuted },
+    yearBtnText: { fontSize: 15, fontWeight: '700', color: theme.colors.text.muted },
     yearBtnTextActive: { color: theme.colors.primaryLight },
 
     saveBtn: {

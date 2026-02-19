@@ -1,7 +1,7 @@
 {
-  "name": "campusconnect-server",
+  "name": "hillflare-server",
   "version": "1.0.0",
-  "description": "CampusConnect Backend API Server",
+  "description": "HillFlare Backend API Server",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

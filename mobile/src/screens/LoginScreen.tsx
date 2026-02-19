@@ -26,14 +26,14 @@ export default function LoginScreen({ navigation }: any) {
 
     return (
         <KeyboardAvoidingView style={s.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <StatusBar barStyle="light-content" backgroundColor={theme.colors.surface} />
+            <StatusBar barStyle="light-content" backgroundColor={theme.colors.background.primary} />
 
             {/* Top section — flat, no card */}
             <View style={s.top}>
                 <View style={s.logoIcon}>
                     <Ionicons name="flame" size={28} color={theme.colors.primary} />
                 </View>
-                <Text style={s.appName}>CampusConnect</Text>
+                <Text style={s.appName}>HillFlare</Text>
                 <Text style={s.tagline}>Find your campus match</Text>
             </View>
 
@@ -45,7 +45,7 @@ export default function LoginScreen({ navigation }: any) {
                     value={email}
                     onChangeText={t => { setEmail(t); setError(''); }}
                     placeholder="you@college.edu"
-                    placeholderTextColor={theme.colors.textMuted}
+                    placeholderTextColor={theme.colors.text.muted}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -68,7 +68,7 @@ export default function LoginScreen({ navigation }: any) {
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
 
     top: {
         flex: 1,
@@ -83,8 +83,8 @@ const s = StyleSheet.create({
         justifyContent: 'center', alignItems: 'center',
         marginBottom: 20,
     },
-    appName: { fontSize: 28, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.5, marginBottom: 8 },
-    tagline: { fontSize: 15, color: theme.colors.textMuted, textAlign: 'center' },
+    appName: { fontSize: 28, fontWeight: '800', color: theme.colors.text.primary, letterSpacing: -0.5, marginBottom: 8 },
+    tagline: { fontSize: 15, color: theme.colors.primaryLight, textAlign: 'center' },
 
     // Flat form section — just a slightly different background, no card border/shadow
     form: {
@@ -95,12 +95,12 @@ const s = StyleSheet.create({
     label: { fontSize: 12, fontWeight: '600', color: theme.colors.textMuted, letterSpacing: 1, marginBottom: 10, textTransform: 'uppercase' },
     input: {
         backgroundColor: theme.colors.surface3,
-        color: theme.colors.text,
+        color: theme.colors.text.primary,
         fontSize: 15,
         padding: 14,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: theme.colors.border,
+        borderColor: theme.colors.secondaryLight,
         marginBottom: 16,
     },
     error: { color: theme.colors.danger, fontSize: 13, marginBottom: 12 },

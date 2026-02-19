@@ -19,12 +19,12 @@ export const sendOTPEmail = async (email: string, otp: string): Promise<void> =>
     }
 
     await transporter.sendMail({
-        from: `"CampusConnect" <${env.SMTP_USER}>`,
+        from: `"HillFlare" <${env.SMTP_USER}>`,
         to: email,
-        subject: 'Your CampusConnect Verification Code',
+        subject: 'Your HillFlare Verification Code',
         html: `
       <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #8B5CF6;">CampusConnect</h2>
+        <h2 style="color: #8B5CF6;">HillFlare</h2>
         <p>Your verification code is:</p>
         <div style="background: #1a1a2e; color: #8B5CF6; font-size: 32px; letter-spacing: 8px; padding: 20px; text-align: center; border-radius: 8px; font-weight: bold;">
           ${otp}

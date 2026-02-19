@@ -22,6 +22,7 @@ interface UserProfile {
     avatar: string;
     hasSwiped?: boolean;
     swipeType?: 'like' | 'pass';
+    isConnected?: boolean;
 }
 
 export default function UserProfileScreen({ route, navigation }: any) {
@@ -140,7 +141,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
     if (error || !user) {
         return (
             <View style={s.center}>
-                <Ionicons name="person-outline" size={48} color={theme.colors.textSubtle} style={{ marginBottom: 12 }} />
+                <Ionicons name="person-outline" size={48} color={theme.colors.text.subtle} style={{ marginBottom: 12 }} />
                 <Text style={s.errorTitle}>Profile not found</Text>
                 <Text style={s.errorSub}>This user may not exist or has been removed.</Text>
                 <TouchableOpacity style={s.backBtnAlt} onPress={() => navigation.goBack()} activeOpacity={0.8}>
@@ -160,6 +161,44 @@ export default function UserProfileScreen({ route, navigation }: any) {
             <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                 <Ionicons name="arrow-back" size={20} color="#fff" />
             </TouchableOpacity>
+
+            {/* Action Buttons - Top Right */}
+            {user && !user.hasSwiped && (
+                <View style={s.actionButtonsTop}>
+                    <TouchableOpacity style={[s.actionBtnTop, s.likeBtnTop]} onPress={() => handleSwipe('like')} disabled={actionLoading}>
+                        <Ionicons name="heart" size={22} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[s.actionBtnTop, s.passBtnTop]} onPress={() => handleSwipe('pass')} disabled={actionLoading}>
+                        <Ionicons name="close" size={24} color="#EF4444" />
+                    </TouchableOpacity>
+                    {user.isConnected && (
+                        <TouchableOpacity style={[s.actionBtnTop, s.msgBtnTop]} onPress={handleMessage}>
+                            <Ionicons name="chatbubble-ellipses" size={20} color={theme.colors.primaryLight} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
+
+            {/* Already Swiped State - Top Right */}
+            {user && user.hasSwiped && (
+                <View style={s.actionButtonsTop}>
+                    <View style={[s.statusBadgeTop, user.swipeType === 'like' ? s.statusLikeTop : s.statusPassTop]}>
+                        <Ionicons
+                            name={user.swipeType === 'like' ? "heart" : "close"}
+                            size={18}
+                            color={user.swipeType === 'like' ? "#fff" : "#EF4444"}
+                        />
+                    </View>
+                    {user.isConnected && (
+                        <TouchableOpacity style={[s.actionBtnTop, s.msgBtnTop]} onPress={handleMessage}>
+                            <Ionicons name="chatbubble-ellipses" size={20} color={theme.colors.primaryLight} />
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity style={[s.actionBtnTop, s.undoBtnTop]} onPress={handleUndo} disabled={actionLoading}>
+                        <Ionicons name="arrow-undo" size={18} color={theme.colors.text.muted} />
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -207,7 +246,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
                     {/* Name & info */}
                     <Text style={s.name}>{user.name}</Text>
                     <View style={s.metaRow}>
-                        <Ionicons name="book-outline" size={13} color={theme.colors.textMuted} />
+                        <Ionicons name="book-outline" size={13} color={theme.colors.text.muted} />
                         <Text style={s.metaText}>{user.department}</Text>
                         <Text style={s.metaDot}>·</Text>
                         <Text style={s.metaText}>Year {user.year}</Text>
@@ -231,7 +270,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
                         <>
                             <View style={s.section}>
                                 <View style={s.sectionLabelRow}>
-                                    <Ionicons name="heart-outline" size={13} color={theme.colors.textMuted} />
+                                    <Ionicons name="heart-outline" size={13} color={theme.colors.text.muted} />
                                     <Text style={s.sectionLabel}>INTERESTS</Text>
                                 </View>
                                 <View style={s.chipGrid}>
@@ -250,7 +289,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
                     {user.clubs?.length > 0 && (
                         <View style={s.section}>
                             <View style={s.sectionLabelRow}>
-                                <Ionicons name="people-outline" size={13} color={theme.colors.textMuted} />
+                                <Ionicons name="people-outline" size={13} color={theme.colors.text.muted} />
                                 <Text style={s.sectionLabel}>CLUBS</Text>
                             </View>
                             <View style={s.chipGrid}>
@@ -264,56 +303,13 @@ export default function UserProfileScreen({ route, navigation }: any) {
                     )}
                 </View>
             </ScrollView>
-
-            {/* Action Buttons */}
-            {user && !user.hasSwiped && (
-                <View style={s.actionContainer}>
-                    <TouchableOpacity style={[s.actionBtn, s.passBtn]} onPress={() => handleSwipe('pass')} disabled={actionLoading}>
-                        <Ionicons name="close" size={32} color="#EF4444" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={s.msgBtn} onPress={handleMessage}>
-                        <Ionicons name="chatbubble-ellipses" size={22} color={theme.colors.primaryLight} />
-                        <Text style={s.msgBtnText}>Message</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[s.actionBtn, s.likeBtn]} onPress={() => handleSwipe('like')} disabled={actionLoading}>
-                        <Ionicons name="heart" size={32} color="#fff" />
-                    </TouchableOpacity>
-                </View>
-            )}
-
-            {/* Already Swiped State */}
-            {user && user.hasSwiped && (
-                <View style={s.resultContainer}>
-                    {user.swipeType === 'like' && (
-                        <TouchableOpacity style={s.messageCta} onPress={handleMessage}>
-                            <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-                            <Text style={s.messageCtaText}>Send a Message</Text>
-                        </TouchableOpacity>
-                    )}
-                    <View style={[s.resultBadge, user.swipeType === 'like' ? s.resultLike : s.resultPass]}>
-                        <Ionicons
-                            name={user.swipeType === 'like' ? "heart" : "close"}
-                            size={20}
-                            color={user.swipeType === 'like' ? "#fff" : "#EF4444"}
-                        />
-                        <Text style={[s.resultText, user.swipeType === 'like' ? { color: '#fff' } : { color: '#EF4444' }]}>
-                            {user.swipeType === 'like' ? 'LIKED' : 'PASSED'}
-                        </Text>
-                    </View>
-
-                    <TouchableOpacity style={s.undoBtn} onPress={handleUndo} disabled={actionLoading}>
-                        <Ionicons name="arrow-undo" size={20} color={theme.colors.textMuted} />
-                        <Text style={s.undoText}>Undo</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
         </View>
     );
 }
 
 const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.surface },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.surface, padding: 20 },
+    container: { flex: 1, backgroundColor: theme.colors.background.primary },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background.primary, padding: 20 },
 
     backBtn: {
         position: 'absolute', top: 50, left: 16, zIndex: 10,
@@ -321,6 +317,32 @@ const s = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center', alignItems: 'center',
     },
+
+    // Action Buttons - Top Right
+    actionButtonsTop: {
+        position: 'absolute', top: 50, right: 16, zIndex: 10,
+        flexDirection: 'column', gap: 10,
+    },
+    actionBtnTop: {
+        width: 46, height: 46, borderRadius: 23,
+        justifyContent: 'center', alignItems: 'center',
+        shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3, shadowRadius: 4, elevation: 6,
+    },
+    likeBtnTop: { backgroundColor: theme.colors.primary },
+    passBtnTop: { backgroundColor: theme.colors.background.primary, borderWidth: 1.5, borderColor: '#EF4444' },
+    msgBtnTop: { backgroundColor: theme.colors.background.primary, borderWidth: 1.5, borderColor: theme.colors.glass.border },
+    undoBtnTop: { backgroundColor: 'rgba(0,0,0,0.5)', borderWidth: 1.5, borderColor: theme.colors.glass.border },
+    
+    // Status Badge - Top Right
+    statusBadgeTop: {
+        width: 46, height: 46, borderRadius: 23,
+        justifyContent: 'center', alignItems: 'center',
+        shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3, shadowRadius: 4, elevation: 6,
+    },
+    statusLikeTop: { backgroundColor: theme.colors.primary },
+    statusPassTop: { backgroundColor: theme.colors.background.primary, borderWidth: 1.5, borderColor: '#EF4444' },
 
     // Photo carousel
     dots: {
@@ -339,7 +361,7 @@ const s = StyleSheet.create({
     // Avatar placeholder
     avatarPlaceholder: {
         height: width * 0.8, justifyContent: 'center', alignItems: 'center',
-        backgroundColor: theme.colors.surface3,
+        backgroundColor: theme.colors.background.tertiary,
     },
     avatarCircle: {
         width: 100, height: 100, borderRadius: 50,
@@ -350,18 +372,18 @@ const s = StyleSheet.create({
 
     // Content
     content: { paddingTop: 24 },
-    name: { fontSize: 26, fontWeight: '800', color: theme.colors.text, letterSpacing: -0.3, paddingHorizontal: 20 },
+    name: { fontSize: 26, fontWeight: '800', color: theme.colors.text.primary, letterSpacing: -0.3, paddingHorizontal: 20 },
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, marginTop: 8 },
-    metaText: { fontSize: 13, color: theme.colors.textMuted },
-    metaDot: { fontSize: 13, color: theme.colors.textSubtle },
+    metaText: { fontSize: 13, color: theme.colors.text.muted },
+    metaDot: { fontSize: 13, color: theme.colors.text.subtle },
 
-    divider: { height: 1, backgroundColor: theme.colors.border, marginVertical: 20 },
+    divider: { height: 1, backgroundColor: theme.colors.glass.border, marginVertical: 20 },
 
     section: { paddingHorizontal: 20 },
-    sectionLabel: { fontSize: 11, fontWeight: '700', color: theme.colors.textMuted, letterSpacing: 1.2, marginBottom: 10 },
+    sectionLabel: { fontSize: 11, fontWeight: '700', color: theme.colors.text.muted, letterSpacing: 1.2, marginBottom: 10 },
     sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
 
-    bioText: { fontSize: 14, color: theme.colors.textMuted, lineHeight: 22 },
+    bioText: { fontSize: 14, color: theme.colors.text.muted, lineHeight: 22 },
 
     chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
     chip: { paddingHorizontal: 14, paddingVertical: 5, borderRadius: 4, backgroundColor: 'rgba(139,92,246,0.1)' },
@@ -370,65 +392,11 @@ const s = StyleSheet.create({
     clubChipText: { fontSize: 12, fontWeight: '500', color: theme.colors.success },
 
     // Error state
-    errorTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text, marginBottom: 6 },
-    errorSub: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center', marginBottom: 24 },
+    errorTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text.primary, marginBottom: 6 },
+    errorSub: { fontSize: 13, color: theme.colors.text.muted, textAlign: 'center', marginBottom: 24 },
     backBtnAlt: {
         paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8,
         backgroundColor: theme.colors.primary,
     },
     backBtnAltText: { fontSize: 13, fontWeight: '700', color: '#fff' },
-
-    // Actions
-    actionContainer: {
-        position: 'absolute', bottom: 30, left: 0, right: 0,
-        flexDirection: 'row', justifyContent: 'center', gap: 30,
-        zIndex: 20,
-    },
-    actionBtn: {
-        width: 64, height: 64, borderRadius: 32,
-        justifyContent: 'center', alignItems: 'center',
-        shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3, shadowRadius: 4.65, elevation: 8,
-    },
-    passBtn: { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: '#EF4444' },
-    likeBtn: { backgroundColor: theme.colors.primary },
-
-    // Result State
-    resultContainer: {
-        position: 'absolute', bottom: 30, left: 0, right: 0,
-        alignItems: 'center', gap: 16, zIndex: 20,
-    },
-    resultBadge: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        paddingHorizontal: 20, paddingVertical: 10, borderRadius: 30,
-        shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2, shadowRadius: 3, elevation: 5,
-    },
-    resultLike: { backgroundColor: theme.colors.primary },
-    resultPass: { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: '#EF4444' },
-    resultText: { fontSize: 14, fontWeight: '700', letterSpacing: 1 },
-
-    undoBtn: {
-        flexDirection: 'row', alignItems: 'center', gap: 6,
-        paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.05)',
-    },
-    undoText: { fontSize: 13, fontWeight: '600', color: theme.colors.textMuted },
-
-    msgBtn: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        paddingHorizontal: 18, paddingVertical: 12, borderRadius: 30,
-        backgroundColor: theme.colors.surface,
-        borderWidth: 1, borderColor: theme.colors.border,
-    },
-    msgBtnText: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
-
-    messageCta: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        paddingHorizontal: 28, paddingVertical: 14, borderRadius: 30,
-        backgroundColor: theme.colors.primary,
-        shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4, shadowRadius: 8, elevation: 8,
-    },
-    messageCtaText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

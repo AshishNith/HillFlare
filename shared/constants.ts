@@ -1,6 +1,6 @@
 // Shared constants for the College Social Platform
 
-export const APP_NAME = 'CampusConnect';
+export const APP_NAME = 'HillFlare';
 export const APP_TAGLINE = 'Your Campus. Your Connections.';
 export const APP_SUBTITLE = 'Verified. Private. Real.';
 
