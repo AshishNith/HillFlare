@@ -1,0 +1,57 @@
+export const mockProfiles = [
+  {
+    id: '1',
+    name: 'Aanya Sharma',
+    department: 'CSE',
+    year: 3,
+    bio: 'Design systems, chai, and late-night debates.',
+    interests: ['UI/UX', 'Debate', 'Travel'],
+    clubs: ['Design Club'],
+    lookingFor: 'Dating',
+    image: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=900&q=80',
+    compatibility: 92,
+  },
+  {
+    id: '2',
+    name: 'Rohan Mehta',
+    department: 'ECE',
+    year: 2,
+    bio: 'Signal processing nerd. Weekend trekker.',
+    interests: ['Music', 'Trekking', 'Chess'],
+    clubs: ['Music Society'],
+    lookingFor: 'Friends',
+    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80',
+    compatibility: 88,
+  },
+  {
+    id: '3',
+    name: 'Meera Kapoor',
+    department: 'Mechanical',
+    year: 4,
+    bio: 'Motorsports + espresso. Build, test, repeat.',
+    interests: ['Robotics', 'Formula SAE', 'Coffee'],
+    clubs: ['Auto Club'],
+    lookingFor: 'Dating',
+    image: 'https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=900&q=80',
+    compatibility: 80,
+  },
+];
+
+export const mockChats = [
+  {
+    id: 'chat-1',
+    name: 'Kunal',
+    lastMessage: 'See you at the amphitheater?',
+    time: '2m',
+    unread: 2,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+  },
+  {
+    id: 'chat-2',
+    name: 'Zara',
+    lastMessage: 'Lab ends at 6. Coffee after?',
+    time: '1h',
+    unread: 0,
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+  },
+];

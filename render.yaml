@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: hillflare-api
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: cd apps/api && npm install && npm run build
+    startCommand: cd apps/api && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false # set in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OTP_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false # set to your Vercel domain, e.g. https://hillflare.vercel.app
+    healthCheckPath: /health

@@ -1,4 +1,13 @@
-.env
 node_modules
-dist
-.expo
+.env
+.env.*
+!.env.example
+.DS_Store
+.vscode
+apps/mobile/.expo
+apps/mobile/.expo-shared
+apps/mobile/web-build
+apps/admin/dist
+apps/api/dist
+apps/web/dist
+coverage

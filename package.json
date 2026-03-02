@@ -1,0 +1,33 @@
+{
+  "name": "hillflare",
+  "version": "1.0.0",
+  "description": "HillFlare monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:mobile": "npm --workspace apps/mobile run start",
+    "dev:admin": "npm --workspace apps/admin run dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:api": "npm --workspace apps/api run dev",
+    "build:admin": "npm --workspace apps/admin run build",
+    "build:web": "npm --workspace apps/web run build",
+    "lint": "npm --workspace apps/admin run lint",
+    "format": "prettier --write ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-test-renderer": "19.1.0",
+    "react-native": "0.81.5"
+  }
+}
