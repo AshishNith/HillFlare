@@ -4,7 +4,7 @@ const IS_PROD = process.env.APP_VARIANT === 'production';
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 
 // Set your production Render API URL here
-const PROD_API_URL = process.env.API_URL || 'https://hillflare-api.onrender.com';
+const PROD_API_URL = process.env.API_URL || 'https://hillflare-1.onrender.com';
 const DEV_API_URL = 'http://localhost:4000';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
