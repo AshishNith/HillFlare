@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Image, 
-  Text, 
-  View, 
-  TouchableOpacity, 
-  Alert, 
-  ScrollView, 
-  TextInput, 
+import {
+  Image,
+  Text,
+  View,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  TextInput,
   ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -35,6 +35,7 @@ export const ProfileScreen: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [galleryPhotos, setGalleryPhotos] = useState<string[]>(user?.galleryUrls || []);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -55,7 +56,8 @@ export const ProfileScreen: React.FC = () => {
 
   const loadProfile = async () => {
     try {
-      setLoadingProfile(true);
+      // Only show full loading spinner if we have no cached user
+      if (!user) setLoadingProfile(true);
       const data = await apiService.getMe();
       setUser(data);
     } catch (error) {
@@ -90,6 +92,7 @@ export const ProfileScreen: React.FC = () => {
 
   const handleSaveProfile = async () => {
     try {
+      setSavingProfile(true);
       const updated = await apiService.updateProfile({
         bio: editedBio,
         interests: editedInterests,
@@ -106,12 +109,14 @@ export const ProfileScreen: React.FC = () => {
       Alert.alert('Success', 'Profile updated successfully');
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (permissionResult.granted === false) {
       Alert.alert('Permission Required', 'Please allow access to your photos');
       return;
@@ -136,7 +141,7 @@ export const ProfileScreen: React.FC = () => {
 
   const takePhoto = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    
+
     if (permissionResult.granted === false) {
       Alert.alert('Permission Required', 'Please allow access to your camera');
       return;
@@ -205,6 +210,10 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const addInterest = () => {
+    if (editedInterests.length >= 20) {
+      Alert.alert('Limit Reached', 'You can add up to 20 interests.');
+      return;
+    }
     if (newInterest.trim() && !editedInterests.includes(newInterest.trim())) {
       setEditedInterests([...editedInterests, newInterest.trim()]);
       setNewInterest('');
@@ -216,6 +225,10 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const addClub = () => {
+    if (editedClubs.length >= 10) {
+      Alert.alert('Limit Reached', 'You can add up to 10 clubs.');
+      return;
+    }
     if (newClub.trim() && !editedClubs.includes(newClub.trim())) {
       setEditedClubs([...editedClubs, newClub.trim()]);
       setNewClub('');
@@ -238,7 +251,7 @@ export const ProfileScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} keyboardShouldPersistTaps="handled">
       <View style={{ position: 'relative' }}>
         <Image
           source={{
@@ -286,6 +299,7 @@ export const ProfileScreen: React.FC = () => {
             )}
           </View>
           <TouchableOpacity
+            disabled={savingProfile}
             onPress={() => {
               if (editMode) {
                 handleSaveProfile();
@@ -301,18 +315,25 @@ export const ProfileScreen: React.FC = () => {
               flexDirection: 'row',
               alignItems: 'center',
               gap: 4,
+              opacity: savingProfile ? 0.7 : 1,
             }}
           >
-            <Ionicons name={editMode ? 'checkmark' : 'pencil'} size={16} color="white" />
-            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-              {editMode ? 'Save' : 'Edit'}
-            </Text>
+            {savingProfile ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name={editMode ? 'checkmark' : 'pencil'} size={16} color="white" />
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                  {editMode ? 'Save' : 'Edit'}
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
 
         {editMode ? (
           <View style={{ marginTop: spacing.md }}>
-            <Text style={{ color: colors.textSecondary, marginBottom: 8, fontWeight: '600' }}>Bio</Text>
+            <Text style={{ color: colors.textSecondary, marginBottom: 8, fontWeight: '600' }}>Bio ({editedBio.length}/500)</Text>
             <TextInput
               value={editedBio}
               onChangeText={setEditedBio}
@@ -320,6 +341,7 @@ export const ProfileScreen: React.FC = () => {
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={4}
+              maxLength={500}
               style={{
                 backgroundColor: colors.card,
                 borderRadius: radii.lg,

@@ -5,6 +5,7 @@ import { CrushSelection } from '../models/CrushSelection';
 import { User } from '../models/User';
 import { Match } from '../models/Match';
 import { Notification } from '../models/Notification';
+import { getIo } from '../sockets';
 
 export const crushRouter = Router();
 
@@ -36,8 +37,6 @@ crushRouter.post('/', requireAuth, async (req, res) => {
   try {
     const { targetUserId } = req.body;
     const userId = req.user?.sub;
-
-    console.log('[crushes] POST /', { userId, targetUserId });
 
     if (!targetUserId) {
       res.status(400).json({ error: 'Target user is required' });
@@ -92,8 +91,6 @@ crushRouter.post('/', requireAuth, async (req, res) => {
       ...(user.collegeId && { collegeId: user.collegeId }),
     });
 
-    console.log('[crushes] Crush created, checking mutual...');
-
     // Check for mutual crush — target user's crush on current user
     // Target may have stored our _id OR email as targetUserId
     const mutualCrush = await CrushSelection.findOne({
@@ -103,8 +100,6 @@ crushRouter.post('/', requireAuth, async (req, res) => {
         { targetUserId: userId },
       ],
     });
-
-    console.log('[crushes] Mutual crush:', mutualCrush ? 'YES' : 'no');
 
     if (mutualCrush) {
       // Mark both crush selections as revealed
@@ -140,7 +135,21 @@ crushRouter.post('/', requireAuth, async (req, res) => {
         ...(user.collegeId && { collegeId: user.collegeId }),
       });
 
-      console.log('[crushes] Mutual crush match created!');
+      // Push real-time notification via Socket.io
+      const io = getIo();
+      if (io) {
+        io.to(`user:${userId}`).emit('notification', {
+          type: 'crush_match',
+          message: `Your crush on ${targetUser.name} is mutual!`,
+          targetUserId: targetUser.email,
+        });
+        io.to(`user:${targetUser.email}`).emit('notification', {
+          type: 'crush_match',
+          message: `Your crush on ${user.name} is mutual!`,
+          targetUserId: userId,
+        });
+      }
+
       res.json({ ok: true, matched: true, matchedUser: targetUser });
       return;
     }
@@ -244,6 +253,21 @@ crushRouter.put('/:crushId', requireAuth, async (req, res) => {
           payload: { message: `Your crush on ${user.name} is mutual! 💕`, targetUserId: userId },
           ...(user.collegeId && { collegeId: user.collegeId }),
         });
+
+        // Push real-time notification via Socket.io
+        const io = getIo();
+        if (io) {
+          io.to(`user:${userId}`).emit('notification', {
+            type: 'crush_match',
+            message: `Your crush on ${targetUser.name} is mutual!`,
+            targetUserId: targetUser.email,
+          });
+          io.to(`user:${targetUser.email}`).emit('notification', {
+            type: 'crush_match',
+            message: `Your crush on ${user.name} is mutual!`,
+            targetUserId: userId,
+          });
+        }
 
         res.json({ data: updatedCrush, matched: true, matchedUser: targetUser });
         return;

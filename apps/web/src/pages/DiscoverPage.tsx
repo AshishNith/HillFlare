@@ -12,6 +12,7 @@ const DiscoverPage: React.FC = () => {
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedUser, setMatchedUser] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [swiping, setSwiping] = useState(false);
 
   useEffect(() => {
     loadProfiles();
@@ -39,8 +40,9 @@ const DiscoverPage: React.FC = () => {
   };
 
   const handleSwipe = async (direction: 'left' | 'right') => {
-    if (currentIndex >= profiles.length) return;
+    if (currentIndex >= profiles.length || swiping) return;
 
+    setSwiping(true);
     const profile = profiles[currentIndex];
     try {
       const result = await apiService.swipe(profile._id || profile.id, direction);
@@ -52,6 +54,8 @@ const DiscoverPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Swipe failed');
+    } finally {
+      setSwiping(false);
     }
   };
 
@@ -154,13 +158,15 @@ const DiscoverPage: React.FC = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => handleSwipe('left')}
-                className="flex-1 rounded-full border-2 border-hf-border bg-white px-4 py-3 text-sm font-semibold text-hf-muted transition hover:border-red-300 hover:text-red-500"
+                disabled={swiping}
+                className="flex-1 rounded-full border-2 border-hf-border bg-white px-4 py-3 text-sm font-semibold text-hf-muted transition hover:border-red-300 hover:text-red-500 disabled:opacity-50"
               >
                 Pass
               </button>
               <button
                 onClick={() => handleSwipe('right')}
-                className="flex-1 rounded-full bg-hf-accent px-4 py-3 text-sm font-semibold text-white shadow-soft transition hover:shadow-glow"
+                disabled={swiping}
+                className="flex-1 rounded-full bg-hf-accent px-4 py-3 text-sm font-semibold text-white shadow-soft transition hover:shadow-glow disabled:opacity-50"
               >
                 Like ❤️
               </button>

@@ -21,6 +21,7 @@ import { io, Socket } from 'socket.io-client';
 import { colors, radii, spacing } from '../theme';
 import { apiService, API_URL } from '../services/api';
 import { useUserStore } from '../store/userStore';
+import { useAuthStore } from '../store/authStore';
 
 interface Message {
   _id: string;
@@ -63,7 +64,11 @@ export const ChatScreen: React.FC = () => {
 
   const setupSocket = () => {
     if (socketRef.current) return;
-    const socket = io(API_URL, { transports: ['websocket'] });
+    const token = useAuthStore.getState().token;
+    const socket = io(API_URL, {
+      transports: ['websocket'],
+      auth: token ? { token } : undefined,
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -314,8 +319,8 @@ export const ChatScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.background }}
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
     >
       {/* Header */}
       <View style={{
@@ -463,7 +468,7 @@ export const ChatScreen: React.FC = () => {
               paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg,
               paddingHorizontal: spacing.lg,
             }}
-            onPress={() => {}} // prevent close on content tap
+            onPress={() => { }} // prevent close on content tap
           >
             <View style={{
               width: 36,

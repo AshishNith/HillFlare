@@ -24,6 +24,11 @@ blockRouter.post('/', requireAuth, async (req, res) => {
       return;
     }
 
+    if (userId === targetUserId) {
+      res.status(400).json({ error: 'Cannot block yourself' });
+      return;
+    }
+
     await Block.findOneAndUpdate(
       { userId, targetUserId },
       { userId, targetUserId, reason },

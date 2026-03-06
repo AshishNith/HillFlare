@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, spacing } from '../theme';
-import { mockProfiles } from '../data/mock';
 import { apiService } from '../services/api';
 
 interface User {

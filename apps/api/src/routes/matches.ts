@@ -32,6 +32,11 @@ matchRouter.delete('/:targetUserId', requireAuth, async (req, res) => {
     const userId = req.user?.sub;
     const { targetUserId } = req.params;
 
+    if (userId === targetUserId) {
+      res.status(400).json({ error: 'Invalid operation' });
+      return;
+    }
+
     await Match.deleteOne({
       $or: [
         { user1Id: userId, user2Id: targetUserId },

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { apiService } from '../services/api';
 
@@ -33,6 +33,7 @@ const MatchesPage: React.FC = () => {
   };
 
   const handleUnmatch = async (email: string) => {
+    if (!confirm('Are you sure you want to unmatch? This cannot be undone.')) return;
     try {
       await apiService.unmatchUser(email);
       loadMatches();
@@ -60,12 +61,12 @@ const MatchesPage: React.FC = () => {
           <p className="mb-6 text-hf-muted">
             Start swiping to find your perfect match!
           </p>
-          <a
-            href="/app/discover"
+          <Link
+            to="/app/discover"
             className="inline-block rounded-full bg-hf-accent px-6 py-3 font-semibold text-white"
           >
             Start Discovering
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

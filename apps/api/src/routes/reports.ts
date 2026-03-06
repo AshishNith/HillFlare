@@ -15,6 +15,11 @@ reportRouter.post('/', requireAuth, async (req, res) => {
       return;
     }
 
+    if (reporterId === targetUserId) {
+      res.status(400).json({ error: 'Cannot report yourself' });
+      return;
+    }
+
     const reporter = await User.findOne({ email: reporterId });
 
     await Report.create({

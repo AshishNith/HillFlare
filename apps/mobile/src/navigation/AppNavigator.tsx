@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, ActivityIndicator, Platform, Alert } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, useNavigation, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { io, Socket } from 'socket.io-client';
 import { SwipeScreen } from '../screens/SwipeScreen';
 import { ExploreScreen } from '../screens/ExploreScreen';
 import { CrushScreen } from '../screens/CrushScreen';
@@ -18,7 +19,8 @@ import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { colors } from '../theme';
 import { useAuthStore } from '../store/authStore';
 import { useUserStore } from '../store/userStore';
-import { apiService } from '../services/api';
+import { useNotificationStore } from '../store/notificationStore';
+import { apiService, API_URL } from '../services/api';
 
 const Tab = createBottomTabNavigator();
 const ChatStack = createNativeStackNavigator();
@@ -44,7 +46,7 @@ const MainTabs: React.FC<{ route: any }> = () => {
     <Tab.Navigator
       screenOptions={({ route }) => {
         let shouldHide = false;
-        if (route.name === 'Chat') {
+        if (route.name === 'Chats') {
           const routeName = getFocusedRouteNameFromRoute(route) ?? 'Chats';
           if (routeName === 'Chat') {
             shouldHide = true;
@@ -62,7 +64,7 @@ const MainTabs: React.FC<{ route: any }> = () => {
               iconName = focused ? 'compass' : 'compass-outline';
             } else if (route.name === 'Crush') {
               iconName = focused ? 'heart' : 'heart-outline';
-            } else if (route.name === 'Chat') {
+            } else if (route.name === 'Chats') {
               iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
             } else if (route.name === 'Profile') {
               iconName = focused ? 'person' : 'person-outline';
@@ -73,20 +75,15 @@ const MainTabs: React.FC<{ route: any }> = () => {
             return <Ionicons name={iconName} size={size} color={color} />;
           },
           tabBarStyle: shouldHide ? { display: 'none' } : {
-            position: 'absolute',
-            left: 20,
-            right: 20,
-            bottom: 20,
-            borderRadius: 24,
-            height: 64,
             backgroundColor: colors.card,
-            borderTopWidth: 0,
-            shadowColor: '#111111',
-            shadowOpacity: 0.08,
-            shadowRadius: 24,
-            paddingBottom: 8,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            height: Platform.OS === 'ios' ? 85 : 65,
+            paddingBottom: Platform.OS === 'ios' ? 25 : 8,
+            paddingTop: 8,
           },
           tabBarActiveTintColor: colors.primary,
+          tabBarHideOnKeyboard: true,
           tabBarInactiveTintColor: colors.textSecondary,
           tabBarLabelStyle: {
             fontSize: 11,
@@ -98,7 +95,7 @@ const MainTabs: React.FC<{ route: any }> = () => {
       <Tab.Screen name="Swipe" component={SwipeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="Crush" component={CrushScreen} />
-      <Tab.Screen name="Chat" component={ChatStackScreen} />
+      <Tab.Screen name="Chats" component={ChatStackScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -142,9 +139,45 @@ const AuthFlow = () => {
 export const AppNavigator = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const needsOnboarding = useAuthStore((state) => state.needsOnboarding);
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const setNeedsOnboarding = useAuthStore((state) => state.setNeedsOnboarding);
+  const userId = useAuthStore((state) => state.userId);
   const setUser = useUserStore((state) => state.setUser);
+  const incrementNotif = useNotificationStore((state) => state.increment);
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
   const [checkingProfile, setCheckingProfile] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+
+  // Global socket connection for real-time notifications
+  useEffect(() => {
+    if (isAuthenticated && userId && !needsOnboarding) {
+      const socket = io(API_URL, { transports: ['websocket'] });
+      socketRef.current = socket;
+
+      socket.on('connect', () => {
+        socket.emit('user:register', userId);
+      });
+
+      socket.on('notification', (data: { type: string; message: string }) => {
+        incrementNotif();
+        Alert.alert(
+          data.type === 'match' ? 'New Match!' : 'Crush Match!',
+          data.message
+        );
+      });
+
+      // Fetch initial unread count
+      apiService.getNotifications().then((res) => {
+        const unread = (res.items || []).filter((n: any) => !n.read).length;
+        setUnreadCount(unread);
+      }).catch(() => {});
+
+      return () => {
+        socket.disconnect();
+        socketRef.current = null;
+      };
+    }
+  }, [isAuthenticated, needsOnboarding, userId]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -183,7 +216,7 @@ export const AppNavigator = () => {
     checkProfileCompleteness();
   };
 
-  if (checkingProfile) {
+  if (!hasHydrated || checkingProfile) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={colors.primary} />

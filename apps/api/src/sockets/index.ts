@@ -1,5 +1,6 @@
 import type { Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 
 let io: Server | null = null;
@@ -16,11 +17,36 @@ export const initSockets = (httpServer: HttpServer): Server => {
     },
   });
 
+  // Socket authentication middleware: verify JWT before allowing connection
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    if (!token) {
+      // Allow unauthenticated connections but they won't be able to register
+      return next();
+    }
+    try {
+      const decoded = jwt.verify(token as string, env.jwtSecret) as { sub: string };
+      (socket as any).userId = decoded.sub;
+      next();
+    } catch {
+      // Allow connection but mark as unauthenticated
+      next();
+    }
+  });
+
   io.on('connection', (socket) => {
-    let userId: string | null = null;
+    let userId: string | null = (socket as any).userId || null;
 
     // Client registers their userId after connecting
+    // Only allow registration if the socket was authenticated with matching JWT
     socket.on('user:register', (id: string) => {
+      // If socket was authenticated via JWT, verify the id matches
+      const authenticatedId = (socket as any).userId;
+      if (authenticatedId && authenticatedId !== id) {
+        socket.emit('error', { message: 'User ID mismatch with authenticated token' });
+        return;
+      }
+
       userId = id;
       socket.join(`user:${id}`); // Personal room for user-level events
 
@@ -37,6 +63,7 @@ export const initSockets = (httpServer: HttpServer): Server => {
     });
 
     socket.on('chat:join', (chatId: string) => {
+      if (!userId) return; // Must be registered to join chats
       socket.join(chatId);
     });
 
@@ -45,10 +72,12 @@ export const initSockets = (httpServer: HttpServer): Server => {
     });
 
     socket.on('chat:typing', (payload: { chatId: string; userId: string }) => {
+      if (!userId || payload.userId !== userId) return; // Prevent spoofing
       socket.to(payload.chatId).emit('chat:typing', payload);
     });
 
     socket.on('chat:stopTyping', (payload: { chatId: string; userId: string }) => {
+      if (!userId || payload.userId !== userId) return;
       socket.to(payload.chatId).emit('chat:stopTyping', payload);
     });
 

@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  SafeAreaView,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../theme';
@@ -212,6 +214,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
       <View style={{ flex: 1 }}>
         {/* Progress */}
         <View
@@ -234,7 +240,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
           ))}
         </View>
 
-        <ScrollView style={{ flex: 1, padding: spacing.xl }}>
+        <ScrollView style={{ flex: 1, padding: spacing.xl }} keyboardShouldPersistTaps="handled">
           {step === 1 && (
             <>
               <Text
@@ -274,6 +280,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                     placeholder="Your name"
                     value={formData.name}
                     onChangeText={(text) => setFormData({ ...formData, name: text })}
+                    maxLength={100}
                   />
                 </View>
 
@@ -293,6 +300,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                     placeholder="e.g., Computer Science"
                     value={formData.department}
                     onChangeText={(text) => setFormData({ ...formData, department: text })}
+                    maxLength={100}
                   />
                 </View>
 
@@ -392,8 +400,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
               </View>
 
               <View>
-                <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: spacing.md }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: spacing.sm }}>
                   Interested in
+                </Text>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: spacing.md }}>
+                  Select all that apply
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
                   {INTERESTED_IN_OPTIONS.map((opt) => {
@@ -612,7 +623,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                     value={formData.bio}
                     onChangeText={(text) => setFormData({ ...formData, bio: text })}
                     multiline
-                    maxLength={200}
+                    maxLength={500}
                   />
                   <Text
                     style={{
@@ -622,7 +633,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                       textAlign: 'right',
                     }}
                   >
-                    {formData.bio.length}/200
+                    {formData.bio.length}/500
                   </Text>
                 </View>
 
@@ -809,6 +820,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
           </TouchableOpacity>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

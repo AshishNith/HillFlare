@@ -23,6 +23,8 @@ const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [newInterest, setNewInterest] = useState('');
   const [newClub, setNewClub] = useState('');
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -46,16 +48,21 @@ const ProfilePage: React.FC = () => {
 
   const handleSave = async () => {
     try {
+      setSaving(true);
+      setSaveError(null);
       const updated = await apiService.updateProfile(user);
       setUser(updated.data || updated);
       setEditing(false);
-    } catch (error) {
-      console.error('Failed to update profile');
+    } catch (error: any) {
+      setSaveError(error.response?.data?.error || 'Failed to save profile. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleAddInterest = () => {
     if (!newInterest.trim()) return;
+    if ((user?.interests || []).length >= 20) return;
     const interests = Array.from(new Set([...(user?.interests || []), newInterest.trim()]));
     setUser({ ...user, interests });
     setNewInterest('');
@@ -67,6 +74,7 @@ const ProfilePage: React.FC = () => {
 
   const handleAddClub = () => {
     if (!newClub.trim()) return;
+    if ((user?.clubs || []).length >= 10) return;
     const clubs = Array.from(new Set([...(user?.clubs || []), newClub.trim()]));
     setUser({ ...user, clubs });
     setNewClub('');
@@ -239,13 +247,17 @@ const ProfilePage: React.FC = () => {
             <div>
               <label className="mb-2 block font-semibold text-hf-charcoal">Bio</label>
               {editing ? (
-                <textarea
-                  value={user?.bio || ''}
-                  onChange={(e) => setUser({ ...user, bio: e.target.value })}
-                  className="w-full rounded-2xl border border-hf-border bg-hf-bg p-4 text-hf-charcoal focus:border-hf-accent focus:outline-none"
-                  rows={4}
-                  placeholder="Tell others about yourself..."
-                />
+                <div>
+                  <textarea
+                    value={user?.bio || ''}
+                    onChange={(e) => setUser({ ...user, bio: e.target.value })}
+                    maxLength={500}
+                    className="w-full rounded-2xl border border-hf-border bg-hf-bg p-4 text-hf-charcoal focus:border-hf-accent focus:outline-none"
+                    rows={4}
+                    placeholder="Tell others about yourself..."
+                  />
+                  <p className="mt-1 text-right text-xs text-hf-muted">{(user?.bio || '').length}/500</p>
+                </div>
               ) : (
                 <p className="text-hf-muted">{user?.bio || 'No bio yet'}</p>
               )}
@@ -366,11 +378,10 @@ const ProfilePage: React.FC = () => {
                       key={opt.value}
                       type="button"
                       onClick={() => setUser({ ...user, gender: opt.value })}
-                      className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                        user?.gender === opt.value
+                      className={`rounded-full border px-4 py-2 text-sm font-medium transition ${user?.gender === opt.value
                           ? 'border-hf-accent bg-hf-accent/10 text-hf-accent'
                           : 'border-hf-border bg-hf-bg text-hf-muted hover:border-hf-accent/50'
-                      }`}
+                        }`}
                     >
                       {opt.label}
                     </button>
@@ -399,11 +410,10 @@ const ProfilePage: React.FC = () => {
                             : [...current, opt.value];
                           setUser({ ...user, interestedIn: next });
                         }}
-                        className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                          selected
+                        className={`rounded-full border px-4 py-2 text-sm font-medium transition ${selected
                             ? 'border-hf-accent bg-hf-accent/10 text-hf-accent'
                             : 'border-hf-border bg-hf-bg text-hf-muted hover:border-hf-accent/50'
-                        }`}
+                          }`}
                       >
                         {opt.label}
                       </button>
@@ -412,11 +422,10 @@ const ProfilePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setUser({ ...user, interestedIn: INTERESTED_IN_OPTIONS.map((o) => o.value) })}
-                    className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                      (user?.interestedIn || []).length === INTERESTED_IN_OPTIONS.length
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition ${(user?.interestedIn || []).length === INTERESTED_IN_OPTIONS.length
                         ? 'border-hf-accent bg-hf-accent/10 text-hf-accent'
                         : 'border-hf-border bg-hf-bg text-hf-muted hover:border-hf-accent/50'
-                    }`}
+                      }`}
                   >
                     Everyone
                   </button>
@@ -478,13 +487,27 @@ const ProfilePage: React.FC = () => {
 
           {/* Actions */}
           {editing && (
-            <div className="mt-8 flex gap-4">
+            <div className="mt-8">
+              {saveError && (
+                <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                  {saveError}
+                </div>
+              )}
+              <div className="flex gap-4">
               <button
                 onClick={handleSave}
-                className="flex-1 rounded-full bg-hf-accent px-6 py-3 font-semibold text-white shadow-soft transition hover:shadow-glow"
+                disabled={saving}
+                className="flex-1 flex items-center justify-center gap-2 rounded-full bg-hf-accent px-6 py-3 font-semibold text-white shadow-soft transition hover:shadow-glow disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Save Changes
+                {saving && (
+                  <svg className="h-5 w-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
+              </div>
             </div>
           )}
         </div>

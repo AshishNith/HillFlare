@@ -53,8 +53,13 @@ const UserProfilePage: React.FC = () => {
 
   const handleChat = async () => {
     if (!user?.email) return;
-    const data = await apiService.findOrCreateChat(user.email);
-    navigate(`/app/chats/${data.data._id}`, { state: { otherUser: user } });
+    try {
+      const data = await apiService.findOrCreateChat(user.email);
+      const chatId = data.data?._id || data._id || data.chatId;
+      navigate(`/app/chats/${chatId}`, { state: { otherUser: user } });
+    } catch (error) {
+      console.error('Failed to start chat');
+    }
   };
 
   const handleCrush = async () => {
@@ -75,8 +80,13 @@ const UserProfilePage: React.FC = () => {
 
   const handleBlock = async () => {
     if (!user?.email) return;
-    await apiService.blockUser(user.email, 'user_block');
-    navigate('/app/discover');
+    if (!confirm(`Are you sure you want to block ${user.name || 'this user'}? They won't be able to see or contact you.`)) return;
+    try {
+      await apiService.blockUser(user.email, 'user_block');
+      navigate('/app/discover');
+    } catch (error) {
+      console.error('Failed to block user');
+    }
   };
 
   const openLightbox = (url: string, index: number) => {

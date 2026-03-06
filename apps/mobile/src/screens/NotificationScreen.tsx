@@ -4,11 +4,13 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, spacing } from '../theme';
 import { apiService } from '../services/api';
+import { useNotificationStore } from '../store/notificationStore';
 
 interface Notification {
   _id: string;
@@ -23,9 +25,13 @@ interface Notification {
 export const NotificationScreen: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const resetBadge = useNotificationStore((state) => state.reset);
 
   useEffect(() => {
     loadNotifications();
+    // Reset unread badge when screen is opened
+    resetBadge();
   }, []);
 
   const loadNotifications = async () => {
@@ -36,7 +42,14 @@ export const NotificationScreen: React.FC = () => {
       console.error('Failed to load notifications');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadNotifications();
+    resetBadge();
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -169,6 +182,9 @@ export const NotificationScreen: React.FC = () => {
         keyExtractor={(item) => item._id}
         renderItem={renderNotification}
         contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
         ListEmptyComponent={
           <View style={{ alignItems: 'center', paddingVertical: 60 }}>
             <Ionicons name="notifications-off-outline" size={64} color={colors.textSecondary} />

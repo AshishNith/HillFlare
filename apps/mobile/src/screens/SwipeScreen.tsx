@@ -19,6 +19,7 @@ import { ProfileCard } from '../components/ProfileCard';
 import { MatchModal } from '../components/MatchModal';
 import { apiService } from '../services/api';
 import { useUserStore } from '../store/userStore';
+import { useNotificationStore } from '../store/notificationStore';
 
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = width - spacing.lg * 2;
@@ -42,12 +43,14 @@ type SwipeProfile = {
 export const SwipeScreen: React.FC = () => {
   const navigation = useNavigation();
   const currentUser = useUserStore((state) => state.user);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const [profileIndex, setProfileIndex] = useState(0);
   const [profiles, setProfiles] = useState<SwipeProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [allSwiped, setAllSwiped] = useState(false);
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedUser, setMatchedUser] = useState<SwipeProfile | null>(null);
+  const [swiping, setSwiping] = useState(false);
 
   // Animated values
   const translateX = useSharedValue(0);
@@ -82,11 +85,14 @@ export const SwipeScreen: React.FC = () => {
   };
 
   const handleSwipe = async (direction: 'left' | 'right') => {
+    if (swiping) return;
+    setSwiping(true);
     const profile = profiles[profileIndex];
     
     // Skip if no profile
     if (!profile) {
       setAllSwiped(true);
+      setSwiping(false);
       return;
     }
     
@@ -99,6 +105,7 @@ export const SwipeScreen: React.FC = () => {
         if (result.matched && direction === 'right') {
           setMatchedUser(profile);
           setShowMatchModal(true);
+          setSwiping(false);
           // Don't advance profile yet - wait for modal to close
           return;
         }
@@ -125,6 +132,7 @@ export const SwipeScreen: React.FC = () => {
     } else {
       setProfileIndex(nextIndex);
     }
+    setSwiping(false);
   };
 
   const handleCloseMatchModal = () => {
@@ -312,6 +320,24 @@ export const SwipeScreen: React.FC = () => {
           }}
         >
           <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+          {unreadCount > 0 && (
+            <View style={{
+              position: 'absolute',
+              top: 4,
+              right: 4,
+              backgroundColor: '#EF4444',
+              borderRadius: 8,
+              minWidth: 16,
+              height: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 4,
+            }}>
+              <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 

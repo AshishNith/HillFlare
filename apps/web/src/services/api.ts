@@ -1,14 +1,16 @@
 import axios from 'axios';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'https://hillflare-1.onrender.com';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// export const API_URL = import.meta.env.VITE_API_URL || 'https://hillflare-1.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
-  maxBodyLength: 50 * 1024 * 1024, // 50MB for base64 images
-  maxContentLength: 50 * 1024 * 1024,
+  maxBodyLength: 5 * 1024 * 1024, // 5MB for base64 images
+  maxContentLength: 5 * 1024 * 1024,
 });
 
 // Add auth token to requests

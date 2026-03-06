@@ -5,6 +5,7 @@ import { io, Socket } from 'socket.io-client';
 import { colors, radii, spacing } from '../theme';
 import { apiService, API_URL } from '../services/api';
 import { useUserStore } from '../store/userStore';
+import { useAuthStore } from '../store/authStore';
 
 interface ChatItem {
   _id: string;
@@ -25,8 +26,10 @@ export const ChatListScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const currentUser = useUserStore((state) => state.user);
   const [chats, setChats] = useState<ChatItem[]>([]);
+  const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -38,14 +41,25 @@ export const ChatListScreen: React.FC = () => {
     };
   }, []);
 
-  // Refresh list when navigating back to this screen
+  // Refresh list when navigating back to this screen (throttled to 30s)
+  const lastFetchRef = useRef(0);
   useEffect(() => {
-    if (isFocused) loadChats();
+    if (isFocused) {
+      const now = Date.now();
+      if (now - lastFetchRef.current > 30000) {
+        loadChats();
+        lastFetchRef.current = now;
+      }
+    }
   }, [isFocused]);
 
   const setupSocket = () => {
     if (socketRef.current) return;
-    const socket = io(API_URL, { transports: ['websocket'] });
+    const token = useAuthStore.getState().token;
+    const socket = io(API_URL, {
+      transports: ['websocket'],
+      auth: token ? { token } : undefined,
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -78,11 +92,16 @@ export const ChatListScreen: React.FC = () => {
 
   const loadChats = async () => {
     try {
-      const data = await apiService.getChats();
-      setChats(data.items || []);
+      const [chatsData, matchesData] = await Promise.all([
+        apiService.getChats(),
+        apiService.getMatches()
+      ]);
+      setChats(chatsData.items || []);
+      setMatches(matchesData.items || []);
     } catch (error) {
-      console.log('Failed to load chats');
-      setChats([]);
+      console.log('Failed to load chats data');
+      // Only clear data on first load failure
+      if (chats.length === 0) setChats([]);
     } finally {
       setLoading(false);
     }
@@ -97,13 +116,15 @@ export const ChatListScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, padding: spacing.lg }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 60, paddingHorizontal: spacing.lg }}>
       <Text style={{ fontSize: 26, fontWeight: '700', color: colors.textPrimary }}>
         Chats
       </Text>
       <TextInput
-        placeholder="Search"
+        placeholder="Search conversations..."
         placeholderTextColor={colors.textSecondary}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
         style={{
           backgroundColor: colors.card,
           borderRadius: radii.lg,
@@ -112,14 +133,76 @@ export const ChatListScreen: React.FC = () => {
           borderColor: colors.border,
           borderWidth: 1,
           marginVertical: spacing.md,
+          color: colors.textPrimary,
         }}
       />
       <FlatList
-        data={chats}
+        ListHeaderComponent={
+          matches.length > 0 ? (
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: spacing.md }}>
+                New Matches
+              </Text>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={matches}
+                keyExtractor={(item) => item._id || item.email}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={async () => {
+                      try {
+                        let targetChatId;
+                        const existingChat = chats.find(c => c.otherUser?.email === item.email);
+
+                        if (existingChat) {
+                          targetChatId = existingChat._id;
+                        } else {
+                          const chatRes = await apiService.findOrCreateChat(item.email);
+                          targetChatId = chatRes.data?._id || chatRes._id;
+                        }
+
+                        (navigation as any).navigate('Chat', {
+                          chatId: targetChatId,
+                          userName: item.name || item.email,
+                          otherUserId: item.email,
+                          otherUser: item,
+                        });
+                      } catch (err) {
+                        console.error('Failed to open match chat', err);
+                      }
+                    }}
+                    style={{ alignItems: 'center', marginRight: spacing.md }}
+                  >
+                    <View style={{
+                      width: 68, height: 68, borderRadius: 34,
+                      borderWidth: 2, borderColor: colors.primary,
+                      padding: 2, marginBottom: 6
+                    }}>
+                      <Image
+                        source={{ uri: item.avatarUrl || 'https://randomuser.me/api/portraits/lego/1.jpg' }}
+                        style={{ width: '100%', height: '100%', borderRadius: 30 }}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textPrimary, maxWidth: 68, textAlign: 'center' }} numberOfLines={1}>
+                      {item.name?.split(' ')[0] || 'User'}
+                    </Text>
+                  </Pressable>
+                )}
+              />
+            </View>
+          ) : null
+        }
+        data={chats.filter((c) => {
+          if (!searchQuery.trim()) return true;
+          const q = searchQuery.toLowerCase();
+          return (c.otherUser?.name || '').toLowerCase().includes(q) ||
+                 (c.otherUser?.email || '').toLowerCase().includes(q);
+        })}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => (navigation as any).navigate('Chat', { 
+            onPress={() => (navigation as any).navigate('Chat', {
               chatId: item._id,
               userName: item.otherUser?.name || item.otherUser?.email,
               otherUserId: item.otherUser?.email,
@@ -184,6 +267,18 @@ export const ChatListScreen: React.FC = () => {
           </Pressable>
         )}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        ListEmptyComponent={
+          <View style={{ alignItems: 'center', paddingVertical: 60 }}>
+            <Text style={{ fontSize: 48, marginBottom: spacing.md }}>💬</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.xs }}>
+              No conversations yet
+            </Text>
+            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+              Match with someone to start chatting!
+            </Text>
+          </View>
+        }
       />
     </View>
   );

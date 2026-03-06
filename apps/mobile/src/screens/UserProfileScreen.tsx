@@ -66,11 +66,7 @@ export const UserProfileScreen: React.FC = () => {
   const fetchUserProfile = async () => {
     try {
       const response = await apiService.getUserById(userId);
-      setUser({
-        ...response.data,
-        lastActive: '2 hours ago', // Mock data
-        mutualFriends: Math.floor(Math.random() * 5) + 1 // Mock data
-      });
+      setUser(response.data || response);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     } finally {
@@ -136,12 +132,29 @@ export const UserProfileScreen: React.FC = () => {
       'Why are you reporting this user?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Inappropriate content' },
-        { text: 'Fake profile' },
-        { text: 'Harassment' },
-        { text: 'Other' }
+        {
+          text: 'Inappropriate content',
+          onPress: () => submitReport('inappropriate_content'),
+        },
+        {
+          text: 'Fake profile',
+          onPress: () => submitReport('fake_profile'),
+        },
+        {
+          text: 'Harassment',
+          onPress: () => submitReport('harassment'),
+        },
       ]
     );
+  };
+
+  const submitReport = async (reason: string) => {
+    try {
+      await apiService.reportUser(userId, reason);
+      Alert.alert('Reported', 'Thank you for your report. We will review it shortly.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to submit report. Please try again.');
+    }
   };
 
   const openPhotoModal = (index: number) => {

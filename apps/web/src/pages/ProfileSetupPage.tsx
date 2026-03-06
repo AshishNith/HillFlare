@@ -43,7 +43,7 @@ const ProfileSetupPage: React.FC = () => {
 
     const handleAddInterest = () => {
         const value = newInterest.trim();
-        if (!value || form.interests.includes(value)) return;
+        if (!value || form.interests.includes(value) || form.interests.length >= 20) return;
         setForm({ ...form, interests: [...form.interests, value] });
         setNewInterest('');
     };
@@ -162,6 +162,7 @@ const ProfileSetupPage: React.FC = () => {
                                         value={form.name}
                                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                                         placeholder="e.g. Aanya Sharma"
+                                        maxLength={100}
                                         className="w-full rounded-xl border border-hf-border bg-hf-bg px-4 py-3 text-hf-charcoal focus:border-hf-accent focus:outline-none"
                                     />
                                 </div>
@@ -278,9 +279,10 @@ const ProfileSetupPage: React.FC = () => {
                                         onChange={(e) => setForm({ ...form, bio: e.target.value })}
                                         placeholder="Design systems, chai, and late-night debates. Always curious."
                                         rows={4}
+                                        maxLength={500}
                                         className="w-full rounded-xl border border-hf-border bg-hf-bg px-4 py-3 text-hf-charcoal focus:border-hf-accent focus:outline-none"
                                     />
-                                    <p className="mt-1 text-xs text-hf-muted">{form.bio.length}/200 characters</p>
+                                    <p className="mt-1 text-xs text-hf-muted">{form.bio.length}/500 characters</p>
                                 </div>
                                 <div>
                                     <label className="mb-1 block text-sm font-semibold text-hf-charcoal">Looking For</label>
@@ -314,6 +316,7 @@ const ProfileSetupPage: React.FC = () => {
                                     onChange={(e) => setNewInterest(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleAddInterest()}
                                     placeholder="e.g. Photography, Coding, Music..."
+                                    maxLength={50}
                                     className="flex-1 rounded-xl border border-hf-border bg-hf-bg px-4 py-3 text-hf-charcoal focus:border-hf-accent focus:outline-none"
                                 />
                                 <button

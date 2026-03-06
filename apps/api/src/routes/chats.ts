@@ -5,6 +5,7 @@ import { Chat } from '../models/Chat';
 import { Message } from '../models/Message';
 import { User } from '../models/User';
 import { Block } from '../models/Block';
+import { Match } from '../models/Match';
 import { Notification } from '../models/Notification';
 import { getIo, isUserInRoom } from '../sockets';
 
@@ -253,6 +254,19 @@ chatRouter.post('/find-or-create', requireAuth, async (req, res) => {
     }
 
     const resolvedTargetId = targetUser.email;
+
+    // Verify users are matched before allowing chat creation
+    const isMatched = await Match.findOne({
+      $or: [
+        { user1Id: currentUserId, user2Id: resolvedTargetId },
+        { user1Id: resolvedTargetId, user2Id: currentUserId },
+      ],
+    });
+
+    if (!isMatched) {
+      res.status(403).json({ error: 'You can only chat with matched users' });
+      return;
+    }
 
     let chat = await Chat.findOne({
       memberIds: { $all: [currentUserId, resolvedTargetId] },

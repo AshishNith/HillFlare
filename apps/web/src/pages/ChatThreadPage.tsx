@@ -137,7 +137,11 @@ const ChatThreadPage: React.FC = () => {
 
   const setupSocket = () => {
     if (!chatId || socketRef.current) return;
-    const socket = io(API_URL, { transports: ['websocket'] });
+    const token = localStorage.getItem('auth_token');
+    const socket = io(API_URL, {
+      transports: ['websocket'],
+      auth: token ? { token } : undefined,
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {

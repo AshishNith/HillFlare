@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
+import { apiService, API_URL } from '../services/api';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,6 +29,38 @@ const HillFlareLogo: React.FC<{ size?: number }> = ({ size = 36 }) => (
 export const AppLayout: React.FC<LayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
+  const userId = useAuthStore((state) => state.userId);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    // Fetch initial unread count
+    apiService.getNotifications().then((data) => {
+      const unread = (data.items || []).filter((n: any) => !n.read).length;
+      setUnreadCount(unread);
+    }).catch(() => {});
+
+    // Listen for real-time notifications
+    if (userId && !socketRef.current) {
+      const token = localStorage.getItem('auth_token');
+      const socket = io(API_URL, {
+        transports: ['websocket'],
+        auth: token ? { token } : undefined,
+      });
+      socketRef.current = socket;
+      socket.on('connect', () => {
+        socket.emit('user:register', userId);
+      });
+      socket.on('notification', () => {
+        setUnreadCount((prev) => prev + 1);
+      });
+    }
+
+    return () => {
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
+  }, [userId]);
 
   const handleLogout = () => {
     logout();
@@ -48,7 +82,14 @@ export const AppLayout: React.FC<LayoutProps> = ({ children, title }) => {
             <Link to="/app/matches" className="text-hf-muted transition hover:text-hf-charcoal">Matches</Link>
             <Link to="/app/crushes" className="text-hf-muted transition hover:text-hf-charcoal">Crushes</Link>
             <Link to="/app/chats" className="text-hf-muted transition hover:text-hf-charcoal">Chats</Link>
-            <Link to="/app/notifications" className="text-hf-muted transition hover:text-hf-charcoal">Notifications</Link>
+            <Link to="/app/notifications" onClick={() => setUnreadCount(0)} className="relative text-hf-muted transition hover:text-hf-charcoal">
+              Notifications
+              {unreadCount > 0 && (
+                <span className="absolute -right-3 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-hf-accent px-1 text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
             <Link to="/app/profile" className="text-hf-muted transition hover:text-hf-charcoal">Profile</Link>
           </nav>
           <button

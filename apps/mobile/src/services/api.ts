@@ -3,10 +3,12 @@ import Constants from 'expo-constants';
 import { useAuthStore } from '../store/authStore';
 
 const extra = Constants.expoConfig?.extra as { apiUrl?: string } | undefined;
-export const API_URL = extra?.apiUrl || 'https://hillflare-1.onrender.com';
+// export const API_URL = extra?.apiUrl || 'https://hillflare-1.onrender.com';
+export const API_URL = extra?.apiUrl || 'http://localhost:4000';
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,6 +22,18 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Handle 401 responses — auto-logout on expired/invalid token
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const { logout } = useAuthStore.getState();
+      logout();
+    }
+    return Promise.reject(error);
+  }
+);
 
 // API Service
 export const apiService = {

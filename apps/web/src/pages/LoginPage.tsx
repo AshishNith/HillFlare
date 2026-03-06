@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore';
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const setProfileComplete = useAuthStore((state) => state.setProfileComplete);
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -45,7 +46,20 @@ const LoginPage: React.FC = () => {
     try {
       const data = await apiService.verifyOtp(email, otp);
       setAuth(data.token, email);
-      navigate('/app');
+
+      // Check if profile is already complete before navigating
+      try {
+        const user = await apiService.getMe();
+        if (user && user.name && user.department && user.year && user.avatarUrl) {
+          setProfileComplete(true);
+          navigate('/app');
+        } else {
+          navigate('/app/setup');
+        }
+      } catch {
+        // Profile doesn't exist yet — go to setup
+        navigate('/app/setup');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Invalid OTP');
     } finally {
