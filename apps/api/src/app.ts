@@ -28,8 +28,8 @@ export const createApp = (): express.Express => {
       credentials: true,
     })
   );
-  // Reduced from 50mb to 5mb — 50mb is excessive and a DoS vector
-  app.use(express.json({ limit: '5mb' }));
+  // 20mb to support base64 photo uploads (up to 6 gallery images)
+  app.use(express.json({ limit: '20mb' }));
   app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
   // Global rate limiter: 100 requests per minute per IP

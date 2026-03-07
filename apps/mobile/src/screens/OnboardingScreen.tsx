@@ -196,9 +196,6 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
       const profileData = {
         ...formData,
         year: parseInt(formData.year),
-        email: authUserId || '',
-        gender: formData.gender,
-        interestedIn: formData.interestedIn,
         avatarUrl: photos[0],
         galleryUrls: photos,
       };
