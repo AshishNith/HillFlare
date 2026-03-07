@@ -3,8 +3,7 @@ import Constants from 'expo-constants';
 import { useAuthStore } from '../store/authStore';
 
 const extra = Constants.expoConfig?.extra as { apiUrl?: string } | undefined;
-// export const API_URL = extra?.apiUrl || 'https://hillflare-1.onrender.com';
-export const API_URL = extra?.apiUrl || 'http://localhost:4000';
+export const API_URL = extra?.apiUrl || 'https://hillflare-1.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,

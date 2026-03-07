@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { env } from '../config/env';
 import { generateOtp } from '../utils/otp';
+import { sendOtpEmail } from '../utils/email';
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_OTP_ATTEMPTS = 5;
@@ -23,7 +24,7 @@ const emailSchema = z.string().email().max(254).trim().toLowerCase();
 
 export const authRouter = Router();
 
-authRouter.post('/otp/request', (req, res) => {
+authRouter.post('/otp/request', async (req, res) => {
   const parsed = emailSchema.safeParse(req.body?.email);
   if (!parsed.success) {
     res.status(400).json({ error: 'A valid email is required' });
@@ -39,7 +40,12 @@ authRouter.post('/otp/request', (req, res) => {
     console.log(`[auth] OTP for ${email}: ${otp}`);
   }
 
-  // TODO: Send OTP via email service (SendGrid, SES, etc.)
+  // Send OTP via email
+  const sent = await sendOtpEmail(email, otp);
+  if (!sent && env.isProd) {
+    res.status(500).json({ error: 'Failed to send OTP email. Please try again.' });
+    return;
+  }
 
   res.json({ ok: true });
 });
