@@ -16,7 +16,7 @@ const UserSchema = new Schema(
     interests: { type: [String], default: [], validate: [(v: string[]) => v.length <= 20, 'Too many interests (max 20)'] },
     clubs: { type: [String], default: [], validate: [(v: string[]) => v.length <= 10, 'Too many clubs (max 10)'] },
     lookingFor: { type: String, maxlength: 100 },
-    avatarUrl: { type: String, maxlength: 2048 },
+    avatarUrl: { type: String },
     galleryUrls: { type: [String], default: [], validate: [(v: string[]) => v.length <= 6, 'Too many gallery images (max 6)'] },
     verified: { type: Boolean, default: false },
     pushToken: { type: String, maxlength: 500 },
