@@ -1,42 +1,28 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { env } from '../config/env';
 
-let transporter: nodemailer.Transporter | null = null;
+let resend: Resend | null = null;
 
-function getTransporter(): nodemailer.Transporter | null {
-  if (transporter) return transporter;
-
-  if (!env.smtpHost || !env.smtpUser || !env.smtpPass) {
-    return null;
-  }
-
-  transporter = nodemailer.createTransport({
-    host: env.smtpHost,
-    port: env.smtpPort,
-    secure: env.smtpPort === 465,
-    auth: {
-      user: env.smtpUser,
-      pass: env.smtpPass,
-    },
-  });
-
-  return transporter;
+function getClient(): Resend | null {
+  if (resend) return resend;
+  if (!env.resendApiKey) return null;
+  resend = new Resend(env.resendApiKey);
+  return resend;
 }
 
 export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
-  const transport = getTransporter();
+  const client = getClient();
 
-  if (!transport) {
-    console.warn('[email] SMTP not configured — OTP not sent. Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env');
+  if (!client) {
+    console.warn('[email] RESEND_API_KEY not set — OTP not sent');
     return false;
   }
 
   try {
-    await transport.sendMail({
-      from: env.smtpFrom,
+    const { error } = await client.emails.send({
+      from: env.emailFrom,
       to,
       subject: 'Your HillFlare Login Code',
-      text: `Your verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <div style="text-align: center; margin-bottom: 32px;">
@@ -51,6 +37,12 @@ export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
         </div>
       `,
     });
+
+    if (error) {
+      console.error('[email] Resend error:', error.message);
+      return false;
+    }
+
     return true;
   } catch (error: any) {
     console.error('[email] Failed to send OTP:', error.message);
