@@ -14,8 +14,8 @@ const profileUpdateSchema = z.object({
   interests: z.array(z.string().max(50)).max(20).optional(),
   clubs: z.array(z.string().max(50)).max(10).optional(),
   lookingFor: z.string().max(100).optional(),
-  avatarUrl: z.string().max(5_000_000).optional().or(z.literal('')),
-  galleryUrls: z.array(z.string().max(5_000_000)).max(6).optional(),
+  avatarUrl: z.string().max(10_000_000).optional().or(z.literal('')),
+  galleryUrls: z.array(z.string().max(10_000_000)).max(6).optional(),
   collegeId: z.string().max(100).optional(),
   gender: z.enum(['male', 'female', 'non-binary', 'prefer_not_to_say']).optional(),
   interestedIn: z.array(z.enum(['male', 'female', 'non-binary'])).optional(),
@@ -38,9 +38,10 @@ userRouter.put('/me', requireAuth, async (req, res) => {
   try {
     const parsed = profileUpdateSchema.safeParse(req.body);
     if (!parsed.success) {
+      console.error('[users] Profile validation failed:', JSON.stringify(parsed.error.issues));
       res.status(400).json({
         error: 'Invalid profile data',
-        details: parsed.error.issues.map(i => i.message),
+        details: parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`),
       });
       return;
     }
@@ -53,7 +54,8 @@ userRouter.put('/me', requireAuth, async (req, res) => {
       { upsert: true, new: true, runValidators: true }
     );
     res.json(user);
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[users] Failed to update profile:', error.message);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });

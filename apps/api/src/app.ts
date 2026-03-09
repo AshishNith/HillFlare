@@ -28,8 +28,8 @@ export const createApp = (): express.Express => {
       credentials: true,
     })
   );
-  // 20mb to support base64 photo uploads (up to 6 gallery images)
-  app.use(express.json({ limit: '20mb' }));
+  // 50mb to support base64 photo uploads (up to 6 gallery images)
+  app.use(express.json({ limit: '50mb' }));
   app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
   // Global rate limiter: 100 requests per minute per IP

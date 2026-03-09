@@ -107,8 +107,12 @@ export const ProfileScreen: React.FC = () => {
       setEditMode(false);
       setSelectedPhoto(null);
       Alert.alert('Success', 'Profile updated successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.details?.join(', ') ||
+        (error?.code === 'ECONNABORTED' ? 'Request timed out. Please check your internet connection and try again.' : 'Failed to update profile. Please try again.');
+      Alert.alert('Error', msg);
     } finally {
       setSavingProfile(false);
     }
@@ -126,7 +130,7 @@ export const ProfileScreen: React.FC = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.7,
       base64: true,
     });
 
@@ -150,7 +154,7 @@ export const ProfileScreen: React.FC = () => {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.7,
       base64: true,
     });
 
@@ -179,7 +183,7 @@ export const ProfileScreen: React.FC = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 5],
-      quality: 0.8,
+      quality: 0.7,
       base64: true,
     });
 

@@ -117,7 +117,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
           const result = await ImagePicker.launchCameraAsync({
             allowsEditing: true,
             aspect: [4, 5],
-            quality: 0.8,
+            quality: 0.7,
             base64: true,
           });
           if (!result.canceled && result.assets[0]) {
@@ -141,7 +141,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [4, 5],
-            quality: 0.8,
+            quality: 0.7,
             base64: true,
           });
           if (!result.canceled && result.assets[0]) {
@@ -202,8 +202,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
       const updated = await apiService.updateProfile(profileData);
       setUser(updated.data || updated);
       onComplete();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save profile');
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.details?.join(', ') ||
+        (error?.code === 'ECONNABORTED' ? 'Request timed out. Please check your internet connection and try again.' : 'Failed to save profile. Please try again.');
+      Alert.alert('Error', msg);
     } finally {
       setLoading(false);
     }

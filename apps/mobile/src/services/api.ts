@@ -7,7 +7,7 @@ export const API_URL = extra?.apiUrl || 'https://hillflare-1.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: 120000,
   headers: {
     'Content-Type': 'application/json',
   },
