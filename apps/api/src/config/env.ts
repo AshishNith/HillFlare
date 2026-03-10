@@ -19,7 +19,8 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET ?? 'change_me',
   otpSecret: process.env.OTP_SECRET ?? 'dev_otp_secret',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
-  // Resend email API (HTTP-based, works on Render free tier)
-  resendApiKey: process.env.RESEND_API_KEY ?? '',
-  emailFrom: process.env.EMAIL_FROM ?? 'HillFlare <onboarding@resend.dev>',
+  // Brevo transactional email API
+  brevoApiKey: process.env.BREVO_API_KEY ?? '',
+  emailFromName: process.env.EMAIL_FROM_NAME ?? 'HillFlare',
+  emailFromAddress: process.env.EMAIL_FROM_ADDRESS ?? 'noreply@hillflare.com',
 };

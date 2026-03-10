@@ -1,29 +1,29 @@
-import { Resend } from 'resend';
+import { BrevoClient } from '@getbrevo/brevo';
 import { env } from '../config/env';
 
-let resend: Resend | null = null;
+let brevo: BrevoClient | null = null;
 
-function getClient(): Resend | null {
-  if (resend) return resend;
-  if (!env.resendApiKey) return null;
-  resend = new Resend(env.resendApiKey);
-  return resend;
+function getClient(): BrevoClient | null {
+  if (brevo) return brevo;
+  if (!env.brevoApiKey) return null;
+  brevo = new BrevoClient({ apiKey: env.brevoApiKey });
+  return brevo;
 }
 
 export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
   const client = getClient();
 
   if (!client) {
-    console.warn('[email] RESEND_API_KEY not set — OTP not sent');
+    console.warn('[email] BREVO_API_KEY not set — OTP not sent');
     return false;
   }
 
   try {
-    const { error } = await client.emails.send({
-      from: env.emailFrom,
-      to,
+    await client.transactionalEmails.sendTransacEmail({
+      sender: { name: env.emailFromName, email: env.emailFromAddress },
+      to: [{ email: to }],
       subject: 'Your HillFlare Login Code',
-      html: `
+      htmlContent: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <div style="text-align: center; margin-bottom: 32px;">
             <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">HillFlare</h1>
@@ -38,14 +38,9 @@ export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
       `,
     });
 
-    if (error) {
-      console.error('[email] Resend error:', error.message);
-      return false;
-    }
-
     return true;
   } catch (error: any) {
-    console.error('[email] Failed to send OTP:', error.message);
+    console.error('[email] Failed to send OTP via Brevo:', error.message);
     return false;
   }
 }
