@@ -19,7 +19,7 @@ export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
   }
 
   try {
-    await client.transactionalEmails.sendTransacEmail({
+    const result = await client.transactionalEmails.sendTransacEmail({
       sender: { name: env.emailFromName, email: env.emailFromAddress },
       to: [{ email: to }],
       subject: 'Your HillFlare Login Code',
@@ -38,6 +38,7 @@ export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
       `,
     });
 
+    console.log('[email] OTP sent to', to, '— messageId:', (result as any)?.messageId);
     return true;
   } catch (error: any) {
     console.error('[email] Failed to send OTP via Brevo:', error.message);
